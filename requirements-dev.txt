@@ -1,0 +1,8 @@
+# Working on this repo: the skill's own extras plus the test runner.
+#
+# Installing the skill on a host does NOT use this file. The skill ships its own
+# requirements.txt and installs it into its own venv:
+#     python3 skills/clean-ai-marks/scripts/ensure_tools.py --install
+-r skills/clean-ai-marks/requirements.txt
+
+pytest>=8

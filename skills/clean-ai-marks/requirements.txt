@@ -1,0 +1,10 @@
+# Optional extras for the clean-ai-marks skill.
+# The scripts run on stdlib alone; these only remove degraded modes.
+# Install into the skill's own venv:  python3 scripts/ensure_tools.py --install
+
+# Bundles libqpdf: strips PDF metadata and rewrites the file, so the pre-strip
+# revision is gone. Replaces the exiftool + qpdf pair for PDFs.
+pikepdf>=9,<11
+
+# Official C2PA binding. Replaces the c2patool CLI for manifest inspection.
+c2pa-python>=0.37,<0.38

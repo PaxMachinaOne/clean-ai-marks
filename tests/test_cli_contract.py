@@ -1,0 +1,133 @@
+"""Pins the CLI surface the README documents: exit codes and flags."""
+
+from __future__ import annotations
+
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+SKILL = ROOT / "skills" / "clean-ai-marks"
+SCRIPTS = SKILL / "scripts"
+FIXTURES = ROOT / "tests" / "fixtures"
+README = SKILL / "README.md"
+sys.path.insert(0, str(SCRIPTS))
+
+import common  # noqa: E402
+
+DOCUMENTED_FLAGS = {
+    "inspect_text.py": ["--json", "--aggressive"],
+    "clean_text.py": [
+        "--output",
+        "--nfkc",
+        "--aggressive-homoglyphs",
+        "--no-normalize-spaces",
+        "--stats",
+        "--in-place",
+    ],
+    "inspect_image.py": ["--json"],
+    "clean_image.py": ["--output", "--in-place", "--keep-non-ai-metadata", "--json"],
+    "inspect_file.py": ["--json", "--aggressive", "--as"],
+    "clean_file.py": [
+        "--output",
+        "--in-place",
+        "--json",
+        "--nfkc",
+        "--aggressive-homoglyphs",
+        "--keep-non-ai-metadata",
+        "--as",
+    ],
+    "rewrite_text.py": [
+        "--output",
+        "--backend",
+        "--model",
+        "--base-url",
+        "--strength",
+        "--no-layer-a-after",
+    ],
+    "ensure_tools.py": ["--install", "--json"],
+}
+
+
+def run(script: str, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(SCRIPTS / script), *args],
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_exit_constants_match_the_documented_table():
+    assert (common.EXIT_OK, common.EXIT_ERROR) == (0, 1)
+    assert (common.EXIT_BAD_INPUT, common.EXIT_DEGRADED) == (2, 3)
+
+
+@pytest.mark.parametrize("script", sorted(DOCUMENTED_FLAGS))
+def test_documented_flags_exist(script: str):
+    r = run(script, "--help")
+    assert r.returncode == 0, r.stderr
+    for flag in DOCUMENTED_FLAGS[script]:
+        assert flag in r.stdout, f"{script} lost {flag}"
+
+
+@pytest.mark.parametrize(
+    "script",
+    ["inspect_text.py", "inspect_file.py", "inspect_image.py", "clean_text.py", "clean_file.py", "clean_image.py"],
+)
+def test_missing_input_exits_bad_input(script: str):
+    r = run(script, str(FIXTURES / "does_not_exist.txt"))
+    assert r.returncode == common.EXIT_BAD_INPUT, r.stderr
+
+
+@pytest.mark.parametrize(
+    "script,fixture",
+    [
+        ("inspect_text.py", "sample_watermarked.txt"),
+        ("inspect_file.py", "sample_watermarked.txt"),
+        ("inspect_file.py", "sample_ai.md"),
+        ("inspect_file.py", "sample_ai.html"),
+        ("inspect_file.py", "sample_meta.svg"),
+    ],
+)
+def test_inspect_exits_one_when_marks_found(script: str, fixture: str):
+    r = run(script, str(FIXTURES / fixture))
+    assert r.returncode == common.EXIT_ERROR, r.stdout
+
+
+@pytest.mark.parametrize("script", ["inspect_text.py", "inspect_file.py"])
+def test_inspect_exits_zero_on_clean_input(script: str, tmp_path: Path):
+    src = tmp_path / "plain.txt"
+    src.write_text("Nothing to see here.\n")
+
+    r = run(script, str(src))
+
+    assert r.returncode == common.EXIT_OK, r.stdout
+
+
+@pytest.mark.parametrize(
+    "fixture", ["sample_watermarked.txt", "sample_ai.md", "sample_ai.html", "sample_meta.svg"]
+)
+def test_clean_then_inspect_round_trips_to_zero(fixture: str, tmp_path: Path):
+    dest = tmp_path / f"clean{Path(fixture).suffix}"
+
+    cleaned = run("clean_file.py", str(FIXTURES / fixture), "-o", str(dest))
+    assert cleaned.returncode == common.EXIT_OK, cleaned.stderr
+
+    assert run("inspect_file.py", str(dest)).returncode == common.EXIT_OK
+
+
+def test_readme_documents_every_exit_code():
+    body = README.read_text()
+    table = body.split("## Exit codes", 1)[1].split("##", 1)[0]
+    for code in (common.EXIT_OK, common.EXIT_ERROR, common.EXIT_BAD_INPUT, common.EXIT_DEGRADED):
+        assert f"| {code} |" in table, f"exit {code} missing from the README table"
+
+
+def test_readme_only_advertises_flags_that_exist():
+    body = README.read_text()
+    known = {flag for flags in DOCUMENTED_FLAGS.values() for flag in flags}
+    advertised = {w.split("`")[0] for w in body.split("`--")[1:]}
+    for flag in advertised:
+        assert f"--{flag}" in known, f"README advertises unknown flag --{flag}"
