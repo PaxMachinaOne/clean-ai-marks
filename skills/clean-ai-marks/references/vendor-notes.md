@@ -6,10 +6,10 @@ This skill targets **mark classes**, not reverse-engineered private detectors. D
 
 Product and regulatory guidance often frames AI disclosure as:
 
-1. **C2PA Content Credentials** — signed, hard-bound metadata (easy to strip; what this skill removes).
-2. **Imperceptible watermark** (SynthID-class) — survives strip/re-upload; includes **soft binding** that can re-attach a remote C2PA manifest.
+1. **C2PA Content Credentials**: signed, hard-bound metadata (easy to strip; what this skill removes).
+2. **Imperceptible watermark** (SynthID-class): survives strip/re-upload; includes **soft binding** that can re-attach a remote C2PA manifest.
 
-See: [Institute of AI PM — C2PA and SynthID guide](https://www.institutepm.com/knowledge-hub/ai-content-provenance-watermarking) (SB 942 / EU AI Act Art. 50 framing). This project only implements the **hard-bound / Unicode / rewrite** side of that stack.
+See: [Institute of AI PM, C2PA and SynthID guide](https://www.institutepm.com/knowledge-hub/ai-content-provenance-watermarking) (SB 942 / EU AI Act Art. 50 framing). This project only implements the **hard-bound / Unicode / rewrite** side of that stack.
 
 ## Anthropic / Claude
 
@@ -31,13 +31,13 @@ Source: [How Claude marks AI-generated content](https://support.claude.com/en/ar
   - **Edit-based** (Unicode / synonym rules) → our Layer A (+ Layer B for synonyms)
   - **Data-driven / backdoor** (trigger phrases) → **out of scope**
   - **Generative** (sampling) → Layer B best-effort
-- Productionized in Gemini-scale systems; open research code exists, but **production keys are not public** — this skill does **not** ship a SynthID detector.
+- Productionized in Gemini-scale systems; open research code exists, but **production keys are not public**; this skill does **not** ship a SynthID detector.
 
 **Skill mapping:** same Layer B rewrite attacks (paraphrase / back-translate / structural) used in the literature against sampling watermarks.
 
 ## OpenAI / ChatGPT
 
-- Public provenance often surfaces as **labels**, **C2PA / Content Credentials** on some media exports, and product UI disclosure — not a fully public text-sampling watermark spec comparable to SynthID-Text.
+- Public provenance often surfaces as **labels**, **C2PA / Content Credentials** on some media exports, and product UI disclosure, not a fully public text-sampling watermark spec comparable to SynthID-Text.
 - Treat **file metadata / C2PA** as in-scope when present; treat any **unpublished** text watermark as the same statistical class → Layer B only, best-effort.
 - Do not invent algorithm claims.
 

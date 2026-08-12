@@ -12,7 +12,7 @@ Primary source: [Anthropic Help Center](https://support.claude.com/en/articles/1
 | Regions | **Worldwide** |
 | Detection | Third-party detection promised; docs **forthcoming** |
 
-## Mechanism 1 — embedded text watermarks
+## Mechanism 1: embedded text watermarks
 
 - Applied at the **model level** into the text itself (not file metadata).
 - Imperceptible; survives copy-paste; may survive light editing.
@@ -22,7 +22,7 @@ Primary source: [Anthropic Help Center](https://support.claude.com/en/articles/1
 
 Layer A scripts only remove **Unicode / homoglyph** carriers. Layer B (rewrite) targets statistical marks.
 
-## Mechanism 2 — C2PA on files
+## Mechanism 2: C2PA on files
 
 - Signed **Content Credentials** on supported types (examples: `.png`, `.jpg`, `.svg`).
 - Tamper-evident while present; stripped by re-encode, metadata scrub, or many upload pipelines.
@@ -30,6 +30,6 @@ Layer A scripts only remove **Unicode / homoglyph** carriers. Layer B (rewrite) 
 
 ## Caveats (Anthropic)
 
-- Detected mark ⇒ content **may have been processed** by Claude — not proof of sole authorship.
+- Detected mark ⇒ content **may have been processed** by Claude, not proof of sole authorship.
 - No mark ≠ human-only origin.
 - Proofreading / translate / summarize can stamp human material.

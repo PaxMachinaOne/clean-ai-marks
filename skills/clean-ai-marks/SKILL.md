@@ -27,7 +27,7 @@ SCRIPTS="<absolute path of this skill>/scripts"
 - Inspect before cleaning. Inspect again after, to verify.
 - Exit 1 from an inspect means **marks found**, not command failure. Never report it as
   a tool error.
-- Exit 3 means **degraded** — output not fully cleaned. Always tell the user.
+- Exit 3 means **degraded**: output not fully cleaned. Always tell the user.
 - Write `*.cleaned.*` by default. Use `--in-place` only when asked.
 - Always offer Layer B for prose. Never skip it silently.
 - Never claim the result is undetectable or free of AI provenance.
@@ -40,7 +40,7 @@ SCRIPTS="<absolute path of this skill>/scripts"
 | --- | --- |
 | Any single file, type unknown | `inspect_file.py` → `clean_file.py` |
 | `.txt`, code | `clean_text.py` (add a formatter for code) |
-| `.md`, `.html` | `clean_file.py` — strips metadata *and* runs Layer A |
+| `.md`, `.html` | `clean_file.py`: strips metadata *and* runs Layer A |
 | `.png`, `.jpg`, `.jpeg` | `clean_file.py` or `clean_image.py` |
 | `.svg`, `.pdf`, `.docx`, `.odt` | `clean_file.py` |
 | Pasted text | write to a temp file, or pipe to `clean_text.py -` |
@@ -72,7 +72,7 @@ python3 "$SCRIPTS/inspect_file.py" OUTPUT
   lookalikes to ASCII.
 - Both alter characters the user may have intended. Mention them; do not apply silently.
 
-### 4. Layer B — rewrite (prose only)
+### 4. Layer B: rewrite (prose only)
 
 - Layer A cannot touch statistical token-sampling watermarks. Only a rewrite can.
 - Offer it for every natural-language input.
@@ -91,7 +91,7 @@ python3 "$SCRIPTS/rewrite_text.py" INPUT -o OUTPUT \
 
 - `--strength`: `paraphrase` (default), `backtranslate` (stronger), `structural`
   (strongest, most meaning drift).
-- `print-prompt` calls no model — use it to obtain the prompt, then rewrite yourself.
+- `print-prompt` calls no model; use it to obtain the prompt, then rewrite yourself.
 - Layer A re-runs on model output automatically; `--no-layer-a-after` disables it.
 - For code: formatter (`prettier`, `black`, `gofmt`) plus Layer A. Rewrite code only
   with explicit user approval.
@@ -100,10 +100,10 @@ python3 "$SCRIPTS/rewrite_text.py" INPUT -o OUTPUT \
 
 State all four, separately:
 
-- **Removed, verified** — counts and actions from Layer A / metadata strip.
-- **Best-effort** — what Layer B did. No undetectability claim.
-- **Degraded** — any exit 3, and which tool would fix it.
-- **Out of scope** — see below. These survive a clean and may still be detectable by
+- **Removed, verified**: counts and actions from Layer A / metadata strip.
+- **Best-effort**: what Layer B did. No undetectability claim.
+- **Degraded**: any exit 3, and which tool would fix it.
+- **Out of scope**: see below. These survive a clean and may still be detectable by
   vendor tools.
 
 ## Exit codes
@@ -113,7 +113,7 @@ State all four, separately:
 | 0 | Clean | Proceed |
 | 1 | Marks found, or residual signals after a clean | Report the findings |
 | 2 | Bad path or unsupported type | Fix the argument |
-| 3 | Degraded — output not fully cleaned | Install the missing tool, then say so |
+| 3 | Degraded: output not fully cleaned | Install the missing tool, then say so |
 
 ## Optional tools
 
@@ -124,7 +124,7 @@ python3 "$SCRIPTS/ensure_tools.py" --install  # skill venv + requirements.txt
 
 - Installs `pikepdf` (PDF strip and rewrite) and `c2pa-python` (C2PA inspect).
 - The scripts find them on their own.
-- `exiftool` has no pip package — install it with the system package manager.
+- `exiftool` has no pip package; install it with the system package manager.
 - `qpdf` and `c2patool` are needed only when the pip equivalents are absent.
 - Without a PDF rewriter, PDF cleans exit 3.
 
@@ -133,15 +133,15 @@ python3 "$SCRIPTS/ensure_tools.py" --install  # skill venv + requirements.txt
 Do not claim to remove these:
 
 - Pixel, audio, and video watermarks (SynthID-media class).
-- C2PA **soft binding** — an in-content watermark that re-links to a remote manifest.
+- C2PA **soft binding**: an in-content watermark that re-links to a remote manifest.
   Stripping the hard-bound manifest does not clear it.
 - Detectors requiring a vendor secret key.
 - Data-driven model backdoors (trigger phrases).
 
 ## References
 
-- `references/mark-classes.md` — Unicode, sampling, C2PA, containers
-- `references/vendor-notes.md` — Claude, Gemini/SynthID, OpenAI, open-LLM
-- `references/removal-matrix.md` — which layer applies when
-- `references/how-claude-marks.md` — Anthropic-specific detail
-- `README.md` — full CLI reference and the residual-risk table
+- `references/mark-classes.md`: Unicode, sampling, C2PA, containers
+- `references/vendor-notes.md`: Claude, Gemini/SynthID, OpenAI, open-LLM
+- `references/removal-matrix.md`: which layer applies when
+- `references/how-claude-marks.md`: Anthropic-specific detail
+- `README.md`: full CLI reference and the residual-risk table

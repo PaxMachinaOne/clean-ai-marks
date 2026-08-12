@@ -11,14 +11,14 @@
 | ODT meta:generator | Scrub `meta.xml` | `clean_file.py` | Loses generator tag | Yes |
 | HTML generator / JSON-LD provenance | Strip tags | `clean_file.py` | Loses meta | Yes |
 | Markdown AI frontmatter keys | Drop keys | `clean_file.py` | Loses YAML keys | Yes |
-| Pixel / audio / video watermarks (SynthID-media) | — | Out of scope | — | — |
-| C2PA soft binding (in-content link to manifest) | — | Out of scope (survives our metadata strip) | — | Vendor detector only |
-| Data-driven model backdoors | — | Out of scope | — | — |
+| Pixel / audio / video watermarks (SynthID-media) | - | Out of scope | - | - |
+| C2PA soft binding (in-content link to manifest) | - | Out of scope (survives our metadata strip) | - | Vendor detector only |
+| Data-driven model backdoors | - | Out of scope | - | - |
 
 ## Default pipeline
 
 1. **Inspect** (`inspect_file.py` or specific inspect_*).
-2. **Deterministic clean** — Layer A text and/or container/image metadata.
+2. **Deterministic clean**: Layer A text and/or container/image metadata.
 3. **Always offer Layer B** rewrite for prose (paraphrase → optional strong pass).
 4. Prefer a **non-origin** rewrite model when available (avoid re-stamping).
 5. Layer A again after rewrite.

@@ -2,9 +2,9 @@
 
 Removes machine-readable AI provenance marks from text and files:
 
-- **Layer A** — invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic and verifiable.
-- **Layer B** — statistical token-sampling watermarks, reduced by rewrite. Best-effort.
-- **Container metadata** — C2PA / EXIF / XMP / document properties on PNG, JPEG, SVG, PDF, DOCX, ODT, HTML, Markdown.
+- **Layer A**: invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic and verifiable.
+- **Layer B**: statistical token-sampling watermarks, reduced by rewrite. Best-effort.
+- **Container metadata**: C2PA / EXIF / XMP / document properties on PNG, JPEG, SVG, PDF, DOCX, ODT, HTML, Markdown.
 
 Covers Claude, Gemini / SynthID-class, OpenAI, and open-LLM marks. `SKILL.md` is the agent-facing workflow; this file is the human-facing one.
 
@@ -33,7 +33,7 @@ python3 scripts/inspect_file.py notes.cleaned.md      # verify
 | --- | --- |
 | `inspect_text.py` / `clean_text.py` | Layer A on text or stdin (`-`) |
 | `inspect_image.py` / `clean_image.py` | PNG / JPEG metadata |
-| `inspect_file.py` / `clean_file.py` | Unified — text, image, container |
+| `inspect_file.py` / `clean_file.py` | Unified: text, image, container |
 | `rewrite_text.py` | Layer B rewrite hook |
 | `ensure_tools.py` | Optional-tool status and venv setup |
 
@@ -54,7 +54,7 @@ python3 scripts/rewrite_text.py draft.md -o draft.rewritten.md --strength paraph
 
 Strengths: `paraphrase` (default), `backtranslate` (stronger token reshuffle), `structural` (strongest, most meaning drift). Backends: `print-prompt`, `ollama`, `openai-compatible`.
 
-Prefer a rewrite model **different from the suspected origin** — rewriting Claude text with Claude can re-stamp it. Layer A runs again on the result unless `--no-layer-a-after`.
+Prefer a rewrite model **different from the suspected origin**: rewriting Claude text with Claude can re-stamp it. Layer A runs again on the result unless `--no-layer-a-after`.
 
 For code, prefer a formatter (`prettier`, `black`, `gofmt`) plus Layer A; statistical marks in code are weak and rewriting risks correctness.
 
@@ -74,14 +74,14 @@ For code, prefer a formatter (`prettier`, `black`, `gofmt`) plus Layer A; statis
 
 | Code | Meaning |
 | --- | --- |
-| 0 | Clean — nothing found, or everything removed |
+| 0 | Clean: nothing found, or everything removed |
 | 1 | Marks found (inspect), or residual C2PA/AI signals after a clean |
 | 2 | Bad input (missing file, unsupported type) |
-| 3 | Degraded — the cleaner ran without the tools it needed; output is not fully cleaned |
+| 3 | Degraded: the cleaner ran without the tools it needed; output is not fully cleaned |
 
 Inspect scripts exit 1 on a dirty file, so guard them in `make`-style pipelines (`-` prefix) or `if` blocks.
 
-These codes are uniform across every script, so exit 1 always means *marks found* and never *the file was unreadable* — a missing or unopenable path is always 2. `tests/test_cli_contract.py` pins that, along with the flag lists above.
+These codes are uniform across every script, so exit 1 always means *marks found* and never *the file was unreadable*; a missing or unopenable path is always 2. `tests/test_cli_contract.py` pins that, along with the flag lists above.
 
 ## Residual risk after a clean
 
@@ -100,10 +100,10 @@ Report the three buckets separately: what was verifiably removed (counts, action
 
 ## Reference docs
 
-- `references/mark-classes.md` — Unicode / sampling / C2PA / containers
-- `references/vendor-notes.md` — Claude, Gemini/SynthID, OpenAI, open-LLM
-- `references/removal-matrix.md` — which layer applies when
-- `references/how-claude-marks.md` — Anthropic-specific detail
+- `references/mark-classes.md`: Unicode / sampling / C2PA / containers
+- `references/vendor-notes.md`: Claude, Gemini/SynthID, OpenAI, open-LLM
+- `references/removal-matrix.md`: which layer applies when
+- `references/how-claude-marks.md`: Anthropic-specific detail
 
 ## Development
 

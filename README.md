@@ -2,9 +2,9 @@
 
 An agent skill that strips machine-readable AI provenance marks from text and files.
 
-- **Layer A** — invisible Unicode: zero-width, bidi, tag chars, variation selectors, exotic spaces. Deterministic, verifiable.
-- **Layer B** — statistical token-sampling watermarks, reduced by rewrite. Best-effort.
-- **Metadata** — C2PA / EXIF / XMP / document properties on PNG, JPEG, SVG, PDF, DOCX, ODT, HTML, Markdown.
+- **Layer A**: invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic, verifiable.
+- **Layer B**: statistical token-sampling watermarks, reduced by rewrite. Best-effort.
+- **Metadata**: C2PA / EXIF / XMP / document properties on PNG, JPEG, SVG, PDF, DOCX, ODT, HTML, Markdown.
 
 Covers Claude, Gemini / SynthID-class, OpenAI, and open-LLM marks.
 
@@ -47,7 +47,7 @@ Makefile            tools / test / smoke / install-skill / clean
 
 ## Dependencies
 
-Two separate install paths — do not confuse them:
+Two separate install paths. Do not confuse them:
 
 | Situation | Use | Gets |
 | --- | --- | --- |
@@ -57,10 +57,10 @@ Two separate install paths — do not confuse them:
 - The skill is self-contained: it ships its own `requirements.txt` and installs it into its own venv, so a fresh host needs nothing from this repo.
 - `requirements-dev.txt` exists only to add the test runner. Nothing at runtime reads it.
 - The scripts run on the Python standard library alone.
-- Optional extras only remove degraded modes — they are never required.
-- `pikepdf` — PDF strip and rewrite. Without it (or `qpdf`), PDF cleans exit 3 and the pre-strip revision stays readable.
-- `c2pa-python` — C2PA manifest inspection.
-- `exiftool` — no pip package; install with `brew install exiftool` or `apt install libimage-exiftool-perl`.
+- Optional extras only remove degraded modes; they are never required.
+- `pikepdf`: PDF strip and rewrite. Without it (or `qpdf`), PDF cleans exit 3 and the pre-strip revision stays readable.
+- `c2pa-python`: C2PA manifest inspection.
+- `exiftool`: no pip package; install with `brew install exiftool` or `apt install libimage-exiftool-perl`.
 - Run `python3 skills/clean-ai-marks/scripts/ensure_tools.py` for a status table.
 
 ## Tests
@@ -68,7 +68,7 @@ Two separate install paths — do not confuse them:
 - Suite covers the Unicode and container cleaners, image metadata paths, the Layer B rewrite hook, security properties (zip bombs, symlink writes, path handling), and a CLI contract pinning documented exit codes and flags against real `--help` output.
 - Tests needing `pikepdf` or `c2pa` skip themselves when absent, so the suite passes with or without the extras.
 - `make test` uses `.venv/bin/python` when a repo-level venv exists, `python3` otherwise.
-- The skill venv at `skills/clean-ai-marks/.venv` is added to `sys.path` by the scripts — no activation needed.
+- The skill venv at `skills/clean-ai-marks/.venv` is added to `sys.path` by the scripts, so no activation needed.
 
 ## CI
 
@@ -80,11 +80,11 @@ Two separate install paths — do not confuse them:
 
 | Channel | Removed? |
 | --- | --- |
-| Invisible Unicode | Yes — verify by re-inspecting |
-| Hard-bound C2PA manifest | Yes — verify by re-inspecting |
+| Invisible Unicode | Yes (verify by re-inspecting) |
+| Hard-bound C2PA manifest | Yes (verify by re-inspecting) |
 | Container metadata (EXIF, XMP, doc props) | Yes |
 | Statistical text watermark | Reduced, not provably gone |
-| C2PA **soft binding** | No — survives by design |
+| C2PA **soft binding** | No (survives by design) |
 | Pixel / audio / video watermarks (SynthID-media) | No |
 | Data-driven model backdoors | No |
 
@@ -94,7 +94,7 @@ skill README before relying on a result.
 ## Intended use
 
 Provenance marks travel with a file whether or not you want them to. The marks this tool
-removes routinely carry more than "an AI touched this" — EXIF holds GPS coordinates and
+removes routinely carry more than "an AI touched this": EXIF holds GPS coordinates and
 device serials, XMP and document properties hold author names and editing history, and
 invisible Unicode survives copy-paste into systems that never expected it. Stripping that
 from your own documents before you publish them is ordinary hygiene.
@@ -107,8 +107,8 @@ Built for:
   fail.
 
 Not built for defeating disclosure obligations. Where a person or institution is owed an
-honest answer about how something was made — academic submissions, journalism, legal
-attestations, contexts with an explicit AI-disclosure policy — removing the mark does not
+honest answer about how something was made (academic submissions, journalism, legal
+attestations, contexts with an explicit AI-disclosure policy), removing the mark does not
 change the answer you owe them, and this tool will not make an undisclosed submission
 truthful.
 
@@ -118,6 +118,6 @@ law on metadata removal, evidence handling, and document tampering is yours to c
 
 ## License
 
-Apache License 2.0 — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+Apache License 2.0. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
 
 Copyright 2026 Novatechflow
