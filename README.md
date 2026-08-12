@@ -90,3 +90,34 @@ Two separate install paths — do not confuse them:
 
 A clean does not mean no AI provenance remains. Check the residual-risk table in the
 skill README before relying on a result.
+
+## Intended use
+
+Provenance marks travel with a file whether or not you want them to. The marks this tool
+removes routinely carry more than "an AI touched this" — EXIF holds GPS coordinates and
+device serials, XMP and document properties hold author names and editing history, and
+invisible Unicode survives copy-paste into systems that never expected it. Stripping that
+from your own documents before you publish them is ordinary hygiene.
+
+Built for:
+
+- Removing metadata from files you own or are authorized to process, before release.
+- Sanitizing text where zero-width characters break downstream parsing, diffs, or search.
+- Research on watermark robustness, and red-teaming provenance schemes to find where they
+  fail.
+
+Not built for defeating disclosure obligations. Where a person or institution is owed an
+honest answer about how something was made — academic submissions, journalism, legal
+attestations, contexts with an explicit AI-disclosure policy — removing the mark does not
+change the answer you owe them, and this tool will not make an undisclosed submission
+truthful.
+
+Two limits worth stating plainly, because they cut both ways: the results are best-effort,
+not guarantees, and a passing inspection is not proof of anything (see Scope above). Local
+law on metadata removal, evidence handling, and document tampering is yours to check.
+
+## License
+
+Apache License 2.0 — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+
+Copyright 2026 Novatechflow
