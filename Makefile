@@ -19,10 +19,12 @@ smoke:
 	python3 $(SCRIPTS)/clean_file.py tests/fixtures/sample_meta.svg -o /tmp/sample_meta.cleaned.svg
 	@echo "smoke ok"
 
+SKILLS_DIR ?= $(HOME)/.grok/skills
+
 install-skill:
-	mkdir -p $(HOME)/.grok/skills
-	ln -sfn $(CURDIR)/skills/clean-ai-marks $(HOME)/.grok/skills/clean-ai-marks
-	@echo "linked -> $(HOME)/.grok/skills/clean-ai-marks"
+	mkdir -p $(SKILLS_DIR)
+	ln -sfn $(CURDIR)/skills/clean-ai-marks $(SKILLS_DIR)/clean-ai-marks
+	@echo "linked -> $(SKILLS_DIR)/clean-ai-marks"
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
