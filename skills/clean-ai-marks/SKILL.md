@@ -70,6 +70,8 @@ python3 "$SCRIPTS/inspect_file.py" OUTPUT
 ```
 
 - The second command is the verification. Exit 0 means clean.
+- Layer A keeps emoji ZWJ sequences, emoji VS16, flag tag sequences, and ZWNJ/ZWJ
+  between Arabic, Indic, or Myanmar letters. Stray copies are still removed.
 - Text-only with Layer A statistics: `clean_text.py INPUT -o OUTPUT --stats`.
 - `--nfkc` NFKC-normalizes; `--aggressive-homoglyphs` maps Cyrillic and fullwidth
   lookalikes to ASCII.

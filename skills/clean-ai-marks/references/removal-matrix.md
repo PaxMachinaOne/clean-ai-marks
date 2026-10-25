@@ -2,7 +2,7 @@
 
 | Target | Method | Script / action | Side effects | Verifiable today? |
 | --- | --- | --- | --- | --- |
-| Invisible Unicode / exotic spaces / bidi / tags | Strip / normalize | `inspect_text.py`, `clean_text.py`, `clean_file.py` | Minimal | Yes (codepoint report) |
+| Invisible Unicode / exotic spaces / bidi / tags | Strip / normalize | `inspect_text.py`, `clean_text.py`, `clean_file.py` | Keeps emoji ZWJ, emoji VS16, flag tags, and script joiners | Yes (codepoint report) |
 | Statistical text watermark (SynthID-class / Kirchenbauer) | Simpler synonyms, lexical paraphrase, back-translate, or outline plus order diversity | Agent Layer B + optional `rewrite_text.py` | Meaning/style drift | No without vendor key/detector |
 | C2PA on PNG/JPEG | Drop APP11 / text chunks / exiftool | `clean_image.py` | Loses provenance metadata | Yes |
 | SVG metadata / XMP | Drop `<metadata>`, xmpmeta | `clean_file.py` | Loses SVG metadata | Yes (re-inspect) |
