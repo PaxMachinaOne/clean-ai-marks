@@ -72,6 +72,9 @@ python3 "$SCRIPTS/inspect_file.py" OUTPUT
 - The second command is the verification. Exit 0 means clean.
 - Layer A keeps emoji ZWJ sequences, emoji VS16, flag tag sequences, and ZWNJ/ZWJ
   between Arabic, Indic, or Myanmar letters. Stray copies are still removed.
+- Image clean keeps color data. PNG keeps its ICC profile, gamma, sRGB, and cHRM
+  chunks. JPEG keeps JFIF, the ICC profile, and the Adobe APP14 segment. EXIF,
+  XMP, comments, and C2PA still go.
 - Text-only with Layer A statistics: `clean_text.py INPUT -o OUTPUT --stats`.
 - `--nfkc` NFKC-normalizes; `--aggressive-homoglyphs` maps Cyrillic and fullwidth
   lookalikes to ASCII.

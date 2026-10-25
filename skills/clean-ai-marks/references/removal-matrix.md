@@ -4,7 +4,7 @@
 | --- | --- | --- | --- | --- |
 | Invisible Unicode / exotic spaces / bidi / tags | Strip / normalize | `inspect_text.py`, `clean_text.py`, `clean_file.py` | Keeps emoji ZWJ, emoji VS16, flag tags, and script joiners | Yes (codepoint report) |
 | Statistical text watermark (SynthID-class / Kirchenbauer) | Simpler synonyms, lexical paraphrase, back-translate, or outline plus order diversity | Agent Layer B + optional `rewrite_text.py` | Meaning/style drift | No without vendor key/detector |
-| C2PA on PNG/JPEG | Drop APP11 / text chunks / exiftool | `clean_image.py` | Loses provenance metadata | Yes |
+| C2PA on PNG/JPEG | Drop APP11 / text chunks / EXIF / XMP | `clean_image.py` | Keeps PNG ICC, gamma, sRGB, and cHRM. Keeps JPEG JFIF, ICC APP2, and Adobe APP14 | Yes |
 | SVG metadata / XMP | Drop `<metadata>`, xmpmeta | `clean_file.py` | Loses SVG metadata | Yes (re-inspect) |
 | PDF XMP / info / C2PA associated file | pikepdf strip + rewrite (else exiftool + qpdf) | `clean_file.py` | Loses PDF metadata and C2PA embedded manifests; degraded (exit 3) without a rewriter | Partial |
 | DOCX props / customXml / body Unicode | Rewrite OOXML zip, drop customXml relationships, Layer A on text nodes | `clean_file.py` | Loses doc properties and invisible characters in the text | Yes |

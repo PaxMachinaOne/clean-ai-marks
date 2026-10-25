@@ -45,7 +45,7 @@ Industry framing (C2PA + SynthID two-layer model; the public write-up is linked 
 
 | Format | Support |
 | --- | --- |
-| PNG / JPEG | Full strip (stdlib + optional exiftool) |
+| PNG / JPEG | Provenance strip. Color chunks stay (PNG ICC, gamma, sRGB, cHRM; JPEG JFIF, ICC APP2, Adobe APP14) |
 | SVG | Drop metadata/XMP blocks |
 | PDF | pikepdf drops document info, XMP, and C2PA associated-file manifests, then rewrites. Else exiftool plus qpdf. Else a degraded XMP cut (exit 3). |
 | DOCX / ODT | Scrub zip XML props / customXml (including relationships). Layer A runs on text nodes. |

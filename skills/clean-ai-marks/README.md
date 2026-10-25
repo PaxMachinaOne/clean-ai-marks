@@ -66,7 +66,7 @@ For code, prefer a formatter (`prettier`, `black`, `gofmt`) plus Layer A; statis
 | Format | What is removed |
 | --- | --- |
 | Text / code | Invisible Unicode, bidi controls, exotic spaces |
-| PNG / JPEG | C2PA (APP11/JUMBF), text chunks, EXIF/XMP AI tags |
+| PNG / JPEG | C2PA (APP11/JUMBF), text chunks, EXIF/XMP. Color data stays: PNG ICC, gamma, sRGB, and cHRM; JPEG JFIF, ICC APP2, and Adobe APP14 |
 | SVG | `<metadata>` blocks, XMP packets |
 | PDF | XMP, document info, and C2PA associated-file manifests (`pikepdf`, else `qpdf`) |
 | DOCX / ODT | Document properties, `customXml` (parts and relationships), `meta:generator`, invisible Unicode in the text |
