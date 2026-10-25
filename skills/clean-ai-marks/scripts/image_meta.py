@@ -81,6 +81,21 @@ def detect_image_format(data: bytes) -> str:
     return "unknown"
 
 
+def _jpeg_app_is_render(marker: int, payload: bytes) -> bool:
+    """APP2 ICC and APP14 Adobe are color data, not provenance."""
+    return (marker == 0xE2 and payload.startswith(b"ICC_PROFILE")) or (
+        marker == 0xEE and payload.startswith(b"Adobe")
+    )
+
+
+def _provenance_needles(render_segment: bool) -> tuple[bytes, ...]:
+    needles = AI_META_HINTS + C2PA_MARKERS
+    if not render_segment:
+        return needles
+    # jumb / cai: / c2pa are short enough to occur inside an ICC profile.
+    return tuple(n for n in needles if len(n) >= 8)
+
+
 def _contains_any(blob: bytes, needles: tuple[bytes, ...]) -> list[str]:
     found = []
     lower = blob.lower()
@@ -170,7 +185,9 @@ def inspect_jpeg(data: bytes) -> tuple[bool, bool, list[str]]:
             has_c2pa = True
             findings.append("JPEG APP11 segment (JUMBF/C2PA common)")
         if marker in (0xE1, 0xE2, 0xED, 0xEE, 0xEB):  # APP1,2,13,14,11
-            hits = _contains_any(payload, AI_META_HINTS + C2PA_MARKERS)
+            hits = _contains_any(
+                payload, _provenance_needles(_jpeg_app_is_render(marker, payload))
+            )
             if hits:
                 has_ai = True
                 if any(
@@ -400,20 +417,23 @@ def strip_jpeg(data: bytes, *, strip_all_app: bool = True) -> tuple[bytes, list[
         payload = data[i + 2 : i + seglen]
         next_i = i + seglen
 
-        # APP0 is JFIF — keep for compatibility unless full strip of all APP
+        # APP0 (JFIF), ICC APP2, and Adobe APP14 are needed to render the image.
         keep = False
         drop = False
         if 0xE0 <= marker <= 0xEF:  # APPn
             if marker == 0xEB:  # APP11 JUMBF/C2PA
                 drop = True
                 actions.append("drop APP11 (C2PA/JUMBF)")
-            elif strip_all_app and marker != 0xE0:
-                # keep APP0 (JFIF) by default
-                drop = True
-                actions.append(f"drop APP{marker - 0xE0}")
-            elif _contains_any(payload, AI_META_HINTS + C2PA_MARKERS):
+            elif _contains_any(
+                payload, _provenance_needles(_jpeg_app_is_render(marker, payload))
+            ):
                 drop = True
                 actions.append(f"drop APP{marker - 0xE0} (AI/C2PA markers)")
+            elif marker == 0xE0 or _jpeg_app_is_render(marker, payload):
+                keep = True
+            elif strip_all_app:
+                drop = True
+                actions.append(f"drop APP{marker - 0xE0}")
             else:
                 keep = True
         elif marker in (0xFE,):  # COM
@@ -452,20 +472,27 @@ def clean_image(
     dest.write_bytes(cleaned)
     exiftool = which("exiftool")
     if exiftool and strip_all_metadata:
+        # -all= deletes an ICC profile. JPEG can exclude it and still keep APP14.
+        # On PNG that same exclude drops gAMA, so PNG only deletes the metadata groups.
+        if fmt == "png":
+            exif_args = [
+                "-EXIF:all=",
+                "-XMP:all=",
+                "-IPTC:all=",
+                "-Photoshop:all=",
+                "-Comment=",
+            ]
+        else:
+            exif_args = ["-all=", "--icc_profile:all"]
         try:
             r = subprocess.run(
-                [
-                    exiftool,
-                    "-all=",
-                    "-overwrite_original",
-                    tool_arg(dest),
-                ],
+                [exiftool, *exif_args, "-overwrite_original", tool_arg(dest)],
                 capture_output=True,
                 text=True,
                 timeout=60,
                 check=False,
             )
-            actions.append(f"exiftool -all= pass (rc={r.returncode})")
+            actions.append(f"exiftool pass (rc={r.returncode})")
         except Exception as e:
             actions.append(f"exiftool failed: {e}")
 
