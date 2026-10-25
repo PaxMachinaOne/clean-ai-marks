@@ -1,6 +1,6 @@
 # How Claude marks AI-generated content
 
-Primary source: [Anthropic Help Center](https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content) (EU AI Act Article 50(2) Code of Practice).
+Primary source: [Anthropic Help Center](https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content) (EU AI Act Article 50(2) Code of Practice). Mechanism write-up: [How Claude's text watermarking works](https://www.anthropic.com/news/claude-text-watermark). Checked 2026-10-25.
 
 ## Policy snapshot
 
