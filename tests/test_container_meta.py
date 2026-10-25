@@ -54,6 +54,30 @@ def test_markdown_frontmatter_survives_blank_lines():
     assert "Body." in cleaned
 
 
+def test_markdown_keeps_ordinary_keys_that_mention_a_vendor():
+    text = (
+        "---\n"
+        "title: How I use Claude for code review\n"
+        "description: Notes on the OpenAI API\n"
+        "author: Alex\n"
+        "generator: Claude\n"
+        "---\n"
+        "body\n"
+    )
+
+    _c2, has_ai, findings, _d = inspect_markdown(text)
+    cleaned, actions = clean_markdown(text)
+
+    assert has_ai
+    assert any(f == "frontmatter key: generator" for f in findings)
+    assert not any("value hit" in f for f in findings)
+    assert "title: How I use Claude for code review" in cleaned
+    assert "description: Notes on the OpenAI API" in cleaned
+    assert "author: Alex" in cleaned
+    assert "generator:" not in cleaned
+    assert not any("value hit" in a for a in actions)
+
+
 def test_markdown_frontmatter_drops_nested_lines_of_dropped_key():
     text = "---\ntitle: Notes\ngenerator:\n  name: Claude\n  version: 3\ntags:\n  - a\n---\nBody.\n"
 
