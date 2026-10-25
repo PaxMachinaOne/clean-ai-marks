@@ -38,6 +38,15 @@ def test_print_prompt_backend():
     assert info["backend"] == "print-prompt"
 
 
+def test_prompts_match_the_published_paraphrase_attacks():
+    lexical = build_prompt("paraphrase", "Hello.", lang="French", original_lang="English")
+    structural = build_prompt("structural", "Hello.", lang="French", original_lang="English")
+    assert "lexical diversity" in lexical
+    assert "keep the sentence order" in lexical
+    assert "outline" in structural
+    assert "sentence order" in structural
+
+
 def test_structural_and_backtranslate_prompts():
     for strength in ("structural", "backtranslate"):
         p = build_prompt(strength, "ABC 123", lang="German", original_lang="English")

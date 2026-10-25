@@ -80,6 +80,21 @@ def test_html_meta_strip():
     assert any("drop" in a for a in actions)
 
 
+def test_svg_drops_generator_attrs_with_metadata():
+    svg = (
+        b'<svg xmlns="http://www.w3.org/2000/svg" inkscape:version="1.2" generator="Claude">'
+        b"<metadata>c2pa</metadata><rect width=\"1\" height=\"1\"/></svg>"
+    )
+
+    cleaned, actions = clean_svg(svg)
+
+    assert b"<metadata" not in cleaned.lower()
+    assert b"inkscape:version" not in cleaned
+    assert b"generator=" not in cleaned
+    assert b"<rect" in cleaned
+    assert any("generator-like" in a for a in actions)
+
+
 def test_svg_metadata():
     svg = b"""<?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg">
@@ -122,6 +137,54 @@ def _make_docx_with_app(app_name: str = "Claude AI Writer") -> bytes:
     return buf.getvalue()
 
 
+def test_docx_strips_body_marks_and_customxml_relationships():
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr(
+            "word/document.xml",
+            '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+            "<w:body><w:p><w:r><w:t>A &amp; B\u200b</w:t></w:r></w:p></w:body></w:document>",
+        )
+        zf.writestr(
+            "word/header1.xml",
+            "<w:hdr><w:t>Head\u200b</w:t></w:hdr>",
+        )
+        zf.writestr(
+            "word/_rels/document.xml.rels",
+            '<Relationships>'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+            '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml" Target="../customXml/item1.xml"/>'
+            "</Relationships>",
+        )
+        zf.writestr("customXml/item1.xml", "<root>c2pa</root>")
+    cleaned, actions = clean_docx(buf.getvalue())
+    with zipfile.ZipFile(io.BytesIO(cleaned)) as zf:
+        body = zf.read("word/document.xml").decode()
+        header = zf.read("word/header1.xml").decode()
+        rels = zf.read("word/_rels/document.xml.rels").decode()
+        names = zf.namelist()
+    assert "\u200b" not in body
+    assert "A &amp; B" in body
+    assert "\u200b" not in header
+    assert "styles.xml" in rels
+    assert "customXml" not in rels
+    assert not any(n.startswith("customXml/") for n in names)
+    assert any("relationship" in a for a in actions)
+    assert any("layer A" in a for a in actions)
+
+
+def test_docx_nfkc_reaches_text_nodes():
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("word/document.xml", "<w:t>ﬁle</w:t>")
+
+    cleaned, actions = clean_docx(buf.getvalue(), nfkc=True)
+
+    with zipfile.ZipFile(io.BytesIO(cleaned)) as zf:
+        assert zf.read("word/document.xml").decode() == "<w:t>file</w:t>"
+    assert any("layer A" in a for a in actions)
+
+
 def test_docx_strips_app_and_customxml(tmp_path: Path):
     data = _make_docx_with_app()
     cleaned, actions = clean_docx(data)
@@ -153,6 +216,26 @@ def _make_odt(generator: str = "Anthropic Claude") -> bytes:
     return buf.getvalue()
 
 
+def test_odt_layer_a_runs_on_content():
+    data = _make_odt()
+    rebuilt = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(data)) as zin, zipfile.ZipFile(rebuilt, "w") as zout:
+        for info in zin.infolist():
+            payload = zin.read(info)
+            if info.filename == "content.xml":
+                payload = (
+                    "<office:document-content><text:p>Hi\u200b</text:p>"
+                    "</office:document-content>"
+                ).encode()
+            zout.writestr(info, payload)
+    cleaned, actions = clean_odt(rebuilt.getvalue())
+    with zipfile.ZipFile(io.BytesIO(cleaned)) as zf:
+        content = zf.read("content.xml").decode()
+    assert "\u200b" not in content
+    assert "Hi" in content
+    assert any("layer A" in a for a in actions)
+
+
 def test_odt_drops_generator(tmp_path: Path):
     data = _make_odt()
     cleaned, actions = clean_odt(data)
@@ -161,6 +244,20 @@ def test_odt_drops_generator(tmp_path: Path):
         meta = zf.read("meta.xml").decode()
         assert "Claude" not in meta
         assert "meta:generator" not in meta or "Anthropic" not in meta
+
+
+def test_clean_container_markdown_honors_nfkc_and_homoglyphs(tmp_path: Path):
+    src = tmp_path / "a.md"
+    src.write_text("ﬁle \u0430\n", encoding="utf-8")
+    dest = tmp_path / "a.cleaned.md"
+
+    plain = tmp_path / "plain.md"
+    clean_container(src, plain)
+    assert plain.read_text(encoding="utf-8") == "ﬁle \u0430\n"
+
+    clean_container(src, dest, nfkc=True, aggressive_homoglyphs=True)
+
+    assert dest.read_text(encoding="utf-8") == "file a\n"
 
 
 def test_clean_container_markdown_file(tmp_path: Path):

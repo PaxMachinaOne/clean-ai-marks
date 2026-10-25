@@ -6,13 +6,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from common import (  # noqa: E402
     EXIT_BAD_INPUT,
-    EXIT_ERROR,
     EXIT_OK,
     cleaned_path,
     detect_kind,
@@ -21,7 +21,7 @@ from common import (  # noqa: E402
     reject_symlink_in_place,
     write_text_file,
 )
-from container_meta import clean_container  # noqa: E402
+from container_meta import ZipTooLarge, clean_container  # noqa: E402
 from image_meta import clean_image  # noqa: E402
 from text_unicode import clean_text  # noqa: E402
 
@@ -96,9 +96,9 @@ def main() -> int:
                 dest,
                 strip_all_metadata=not args.keep_non_ai_metadata,
             )
-        except Exception as e:
+        except (OSError, ValueError) as e:
             eprint(f"error: {e}")
-            return EXIT_ERROR
+            return EXIT_BAD_INPUT
         result = {"kind": "image", **result}
         if args.json:
             print(json.dumps(result, indent=2))
@@ -111,10 +111,15 @@ def main() -> int:
         return exit_code(result)
 
     try:
-        result = clean_container(src, dest)
-    except Exception as e:
+        result = clean_container(
+            src,
+            dest,
+            nfkc=args.nfkc,
+            aggressive_homoglyphs=args.aggressive_homoglyphs,
+        )
+    except (OSError, ValueError, ZipTooLarge, zipfile.BadZipFile) as e:
         eprint(f"error: {e}")
-        return EXIT_ERROR
+        return EXIT_BAD_INPUT
     result = {"kind": "container", **result}
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))

@@ -52,7 +52,7 @@ export WATERMARKS_REWRITE_BASE_URL=http://127.0.0.1:11434
 python3 scripts/rewrite_text.py draft.md -o draft.rewritten.md --strength paraphrase
 ```
 
-Strengths: `paraphrase` (default), `backtranslate` (stronger token reshuffle), `structural` (strongest, most meaning drift). Backends: `print-prompt`, `ollama`, `openai-compatible`.
+Strengths: `paraphrase` (default: high lexical diversity, stable sentence order), `backtranslate` (pivot language and back), `structural` (outline, then new wording and sentence order; most meaning drift). Backends: `print-prompt`, `ollama`, `openai-compatible`. A rewrite reduces a sampling watermark. It does not certify removal. See `references/watermark-attacks.md`.
 
 Prefer a rewrite model **different from the suspected origin**: rewriting Claude text with Claude can re-stamp it. Layer A runs again on the result unless `--no-layer-a-after`.
 
@@ -65,8 +65,8 @@ For code, prefer a formatter (`prettier`, `black`, `gofmt`) plus Layer A; statis
 | Text / code | Invisible Unicode, bidi controls, exotic spaces |
 | PNG / JPEG | C2PA (APP11/JUMBF), text chunks, EXIF/XMP AI tags |
 | SVG | `<metadata>` blocks, XMP packets |
-| PDF | XMP + document info (rewritten via `pikepdf`, else `qpdf`) |
-| DOCX / ODT | Document properties, `customXml`, `meta:generator` |
+| PDF | XMP, document info, and C2PA associated-file manifests (`pikepdf`, else `qpdf`) |
+| DOCX / ODT | Document properties, `customXml` (parts and relationships), `meta:generator`, invisible Unicode in the text |
 | HTML | `meta` generator, JSON-LD provenance, `data-ai*` |
 | Markdown | AI keys in YAML frontmatter |
 
@@ -76,12 +76,12 @@ For code, prefer a formatter (`prettier`, `black`, `gofmt`) plus Layer A; statis
 | --- | --- |
 | 0 | Clean: nothing found, or everything removed |
 | 1 | Marks found (inspect), or residual C2PA/AI signals after a clean |
-| 2 | Bad input (missing file, unsupported type) |
+| 2 | Bad input (missing file, unsupported type, or a file the cleaner cannot read) |
 | 3 | Degraded: the cleaner ran without the tools it needed; output is not fully cleaned |
 
 Inspect scripts exit 1 on a dirty file, so guard them in `make`-style pipelines (`-` prefix) or `if` blocks.
 
-These codes are uniform across every script, so exit 1 always means *marks found* and never *the file was unreadable*; a missing or unopenable path is always 2. `tests/test_cli_contract.py` pins that, along with the flag lists above.
+These codes are uniform across every script, so exit 1 always means *marks found* and never *the file was unreadable*. A missing path, an unsupported type, or a file the cleaner cannot read is exit 2. `tests/test_cli_contract.py` pins that, along with the flag lists above.
 
 ## Residual risk after a clean
 
@@ -93,6 +93,7 @@ A successful strip does not mean no provenance remains. What survives:
 | Hard-bound C2PA manifest | No | Content Credentials verify, `c2pa-python` |
 | C2PA **soft binding** (in-content link to a remote manifest) | **Yes, by design** | vendor detector only |
 | Pixel / audio / video watermarks (SynthID-media) | **Yes** | SynthID Detector |
+| Visible overlays (logos, stock stamps) | **Yes** | Look at the image |
 | Statistical text watermark | Reduced, not provably gone | vendor detector / secret key |
 | Data-driven model backdoors | **Yes** | out of reach |
 
@@ -104,6 +105,7 @@ Report the three buckets separately: what was verifiably removed (counts, action
 - `references/vendor-notes.md`: Claude, Gemini/SynthID, OpenAI, open-LLM
 - `references/removal-matrix.md`: which layer applies when
 - `references/how-claude-marks.md`: Anthropic-specific detail
+- `references/watermark-attacks.md`: sampling, pixel, and visible watermarks
 
 ## Development
 

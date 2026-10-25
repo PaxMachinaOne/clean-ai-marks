@@ -70,7 +70,8 @@ python3 "$SCRIPTS/inspect_file.py" OUTPUT
 - Text-only with Layer A statistics: `clean_text.py INPUT -o OUTPUT --stats`.
 - `--nfkc` NFKC-normalizes; `--aggressive-homoglyphs` maps Cyrillic and fullwidth
   lookalikes to ASCII.
-- Both alter characters the user may have intended. Mention them; do not apply silently.
+- Both apply to plain text and to text inside HTML, Markdown, DOCX, and ODT.
+  They alter characters the user may have intended. Mention them; do not apply silently.
 
 ### 4. Layer B: rewrite (prose only)
 
@@ -89,8 +90,9 @@ python3 "$SCRIPTS/rewrite_text.py" INPUT -o OUTPUT \
   --backend ollama --model llama3.2 --base-url http://127.0.0.1:11434
 ```
 
-- `--strength`: `paraphrase` (default), `backtranslate` (stronger), `structural`
-  (strongest, most meaning drift).
+- `--strength`: `paraphrase` (default, high lexical diversity, stable sentence
+  order), `backtranslate` (pivot language and back), `structural` (outline, then
+  new wording and sentence order; most meaning drift).
 - `print-prompt` calls no model; use it to obtain the prompt, then rewrite yourself.
 - Layer A re-runs on model output automatically; `--no-layer-a-after` disables it.
 - For code: formatter (`prettier`, `black`, `gofmt`) plus Layer A. Rewrite code only
@@ -112,7 +114,7 @@ State all four, separately:
 | --- | --- | --- |
 | 0 | Clean | Proceed |
 | 1 | Marks found, or residual signals after a clean | Report the findings |
-| 2 | Bad path or unsupported type | Fix the argument |
+| 2 | Bad path, unsupported type, or a file the cleaner cannot read | Fix the argument |
 | 3 | Degraded: output not fully cleaned | Install the missing tool, then say so |
 
 ## Optional tools
@@ -132,7 +134,11 @@ python3 "$SCRIPTS/ensure_tools.py" --install  # skill venv + requirements.txt
 
 Do not claim to remove these:
 
-- Pixel, audio, and video watermarks (SynthID-media class).
+- Pixel, audio, and video watermarks (SynthID-media class). A regeneration
+  attack needs a generative denoiser this skill does not ship. A blur is not a
+  substitute.
+- Visible overlays (logos, stock stamps). Single-image removal does not recover
+  the pixels underneath.
 - C2PA **soft binding**: an in-content watermark that re-links to a remote manifest.
   Stripping the hard-bound manifest does not clear it.
 - Detectors requiring a vendor secret key.
@@ -144,4 +150,5 @@ Do not claim to remove these:
 - `references/vendor-notes.md`: Claude, Gemini/SynthID, OpenAI, open-LLM
 - `references/removal-matrix.md`: which layer applies when
 - `references/how-claude-marks.md`: Anthropic-specific detail
+- `references/watermark-attacks.md`: what a rewrite does to a sampling watermark, and what stays
 - `README.md`: full CLI reference and the residual-risk table

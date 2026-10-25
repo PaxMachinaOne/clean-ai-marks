@@ -33,7 +33,7 @@ Source: [How Claude marks AI-generated content](https://support.claude.com/en/ar
   - **Generative** (sampling) → Layer B best-effort
 - Productionized in Gemini-scale systems; open research code exists, but **production keys are not public**; this skill does **not** ship a SynthID detector.
 
-**Skill mapping:** same Layer B rewrite attacks (paraphrase / back-translate / structural) used in the literature against sampling watermarks.
+**Skill mapping:** Layer B rewrite. `paraphrase` is high lexical diversity at a stable sentence order, `backtranslate` is a pivot language and back, `structural` rebuilds from an outline and changes sentence order. See `watermark-attacks.md`.
 
 ## OpenAI / ChatGPT
 

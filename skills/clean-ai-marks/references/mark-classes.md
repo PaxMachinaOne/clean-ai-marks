@@ -47,8 +47,8 @@ Industry framing (C2PA + SynthID two-layer model; see Institute of AI PM guide i
 | --- | --- |
 | PNG / JPEG | Full strip (stdlib + optional exiftool) |
 | SVG | Drop metadata/XMP blocks |
-| PDF | Prefer exiftool; degraded stdlib XMP strip |
-| DOCX / ODT | Scrub zip XML props / customXml |
+| PDF | pikepdf drops document info, XMP, and C2PA associated-file manifests, then rewrites. Else exiftool plus qpdf. Else a degraded XMP cut (exit 3). |
+| DOCX / ODT | Scrub zip XML props / customXml (including relationships). Layer A runs on text nodes. |
 | HTML | Meta generator / JSON-LD / data-ai* |
 | Markdown | YAML frontmatter AI keys |
 

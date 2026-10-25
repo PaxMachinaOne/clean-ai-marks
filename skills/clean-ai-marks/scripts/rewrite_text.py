@@ -38,11 +38,16 @@ from text_unicode import clean_text  # noqa: E402
 
 # Single-shot instructions, one per --strength. The multi-step variants in SKILL.md
 # are agent-orchestrated and deliberately not modelled here.
+# Query-free scrub of a sampling watermark is a paraphrase. DIPPER's published knobs
+# are lexical diversity (wording, stable order) and order diversity (split, merge,
+# reorder). Back-translation is the other attack in the Kirchenbauer robustness eval.
+# Neither certifies removal: unigram watermarks often survive one paraphrase.
 PROMPTS = {
     "paraphrase": (
-        "Rewrite the following text so that every sentence uses different wording and "
-        "structure while preserving all facts, numbers, names, and technical identifiers. "
-        "Do not add or remove claims. Output only the rewritten text.\n\n---\n{TEXT}"
+        "Rewrite the following text with high lexical diversity. Change the words in "
+        "every sentence and keep the sentence order. Preserve all facts, numbers, names, "
+        "and technical identifiers. Do not add or remove claims. Output only the rewritten "
+        "text.\n\n---\n{TEXT}"
     ),
     "backtranslate": (
         "Translate the text to {LANG}, then translate that result back to {ORIGINAL_LANG}. "
@@ -51,8 +56,9 @@ PROMPTS = {
     ),
     "structural": (
         "First extract a bullet outline of all claims (no full sentences). Then write a "
-        "complete document from that outline in a clear professional style without omitting "
-        "any bullet. Output only the final document.\n\n---\n{TEXT}"
+        "complete document from that outline. Use different wording and a different "
+        "sentence order from the source, and do not omit any bullet. Preserve all facts, "
+        "numbers, names, and technical identifiers. Output only the final document.\n\n---\n{TEXT}"
     ),
 }
 

@@ -107,6 +107,52 @@ def test_pdf_clean_with_pikepdf_leaves_no_residue(tmp_path: Path):
     assert b"Claude" not in raw
 
 
+def test_pdf_clean_drops_c2pa_associated_file_and_keeps_others(tmp_path: Path):
+    pikepdf = pytest.importorskip("pikepdf")
+    src = tmp_path / "marked.pdf"
+    pdf = pikepdf.Pdf.new()
+    pdf.add_blank_page()
+    c2pa = pikepdf.AttachedFileSpec(
+        pdf,
+        b"c2pa-secret-manifest",
+        filename="c2pa.dat",
+        mime_type="application/c2pa",
+        relationship=pikepdf.Name.C2PA_Manifest,
+    )
+    other = pikepdf.AttachedFileSpec(
+        pdf,
+        b"ordinary-attachment",
+        filename="notes.txt",
+        mime_type="text/plain",
+        relationship=pikepdf.Name.Data,
+    )
+    pdf.Root.AF = pikepdf.Array([c2pa.obj, other.obj])
+    pdf.Root.Names = pikepdf.Dictionary()
+    tree = pikepdf.NameTree.new(pdf)
+    tree["c2pa.dat"] = c2pa.obj
+    tree["notes.txt"] = other.obj
+    pdf.Root.Names.EmbeddedFiles = tree.obj
+    pdf.pages[0].obj.AF = pikepdf.Array([c2pa.obj])
+    pdf.save(src)
+
+    dest = tmp_path / "clean.pdf"
+    actions, meta = container_meta.clean_pdf(src, dest)
+
+    assert meta["degraded"] is False
+    assert any("C2PA" in a for a in actions)
+    out = pikepdf.open(dest)
+    rels = [str(item.get("/AFRelationship")) for item in out.Root.AF]
+    assert rels == ["/Data"]
+    assert "/AF" not in out.pages[0].obj
+    names = list(pikepdf.NameTree(out.Root.Names.EmbeddedFiles))
+    assert names == ["notes.txt"]
+    kept = pikepdf.NameTree(out.Root.Names.EmbeddedFiles)["notes.txt"]
+    assert kept["/EF"]["/F"].read_bytes() == b"ordinary-attachment"
+    for obj in out.objects:
+        if isinstance(obj, pikepdf.Stream):
+            assert b"c2pa-secret-manifest" not in obj.read_bytes()
+
+
 def test_c2pa_probe_reports_no_manifest_for_plain_image(tmp_path: Path):
     pytest.importorskip("c2pa")
     from test_clean_image import _minimal_png_with_text

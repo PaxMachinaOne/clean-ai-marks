@@ -17,6 +17,7 @@ from shutil import which
 
 from common import tool_arg, write_text_file
 from image_meta import AI_META_HINTS, C2PA_MARKERS, run_optional_tools
+from text_unicode import clean_text
 
 # Caps on decompressed zip content, so a crafted DOCX/ODT cannot exhaust memory.
 MAX_ZIP_MEMBER_BYTES = 64 * 1024 * 1024
@@ -376,17 +377,15 @@ def clean_svg(data: bytes) -> tuple[bytes, list[str]]:
         return body
 
     text = re.sub(r"<!--.*?-->", _cmt, text, flags=re.DOTALL)
-    if not actions:
-        # still strip generator attribute on root if present
-        new, n = re.subn(
-            r'\s(inkscape:version|sodipodi:docname|generator)\s*=\s*"[^"]*"',
-            "",
-            text,
-            flags=re.I,
-        )
-        if n:
-            actions.append(f"drop generator-like attrs x{n}")
-            text = new
+    new, n = re.subn(
+        r'\s(inkscape:version|sodipodi:docname|generator)\s*=\s*"[^"]*"',
+        "",
+        text,
+        flags=re.I,
+    )
+    if n:
+        actions.append(f"drop generator-like attrs x{n}")
+        text = new
     if not actions:
         actions.append("no SVG metadata removed")
     return text.encode("utf-8", errors="surrogateescape"), actions
@@ -405,6 +404,67 @@ DOCX_CUSTOM_PREFIXES = (
     "customXml/",
     "docProps/",
 )
+
+_CUSTOMXML_REL_RE = re.compile(
+    r"[ \t]*<Relationship\b[^>]*\bTarget=\"[^\"]*customXml/[^\"]*\"[^>]*/>\s*",
+    re.I,
+)
+
+
+def _layer_a_xml_text(
+    xml: str, *, nfkc: bool = False, aggressive_homoglyphs: bool = False
+) -> tuple[str, int, int]:
+    """Run Layer A on XML text nodes. Tags, including attributes, are left as-is."""
+    removed = 0
+    replaced = 0
+    out: list[str] = []
+    for part in re.split(r"(<[^>]*>)", xml):
+        if part.startswith("<"):
+            out.append(part)
+            continue
+        cleaned, stats = clean_text(
+            part, nfkc=nfkc, aggressive_homoglyphs=aggressive_homoglyphs
+        )
+        removed += stats["removed_count"]
+        replaced += stats["replaced_count"]
+        out.append(cleaned)
+    return "".join(out), removed, replaced
+
+
+def _docx_prose(name: str) -> bool:
+    if not name.startswith("word/") or not name.endswith(".xml") or name.count("/") != 1:
+        return False
+    base = name[len("word/") :]
+    return base == "document.xml" or base.startswith(
+        ("header", "footer", "footnotes", "endnotes", "comments")
+    )
+
+
+def _scrub_prose(
+    text: str, actions: list[str], enabled: bool, text_flags: dict[str, bool]
+) -> str:
+    if not enabled:
+        return text
+    new, stats = clean_text(text, **text_flags)
+    if new == text:
+        return text
+    actions.append(
+        f"layer A text: removed={stats['removed_count']} replaced={stats['replaced_count']}"
+    )
+    return new
+
+
+def _apply_layer_a_xml(
+    raw: bytes, actions: list[str], *, nfkc: bool, aggressive_homoglyphs: bool
+) -> bytes:
+    text = raw.decode("utf-8", errors="surrogateescape")
+    new, removed, replaced = _layer_a_xml_text(
+        text, nfkc=nfkc, aggressive_homoglyphs=aggressive_homoglyphs
+    )
+    if new == text:
+        return raw
+    actions.append(f"layer A text: removed={removed} replaced={replaced}")
+    return new.encode("utf-8", errors="surrogateescape")
 
 
 def _zip_namelist(data: bytes) -> list[str]:
@@ -443,7 +503,9 @@ def inspect_docx(data: bytes) -> tuple[bool, bool, list[str], dict]:
     return has_c2pa, has_ai or has_c2pa, findings, {"parts": len(parts)}
 
 
-def clean_docx(data: bytes) -> tuple[bytes, list[str]]:
+def clean_docx(
+    data: bytes, *, nfkc: bool = False, aggressive_homoglyphs: bool = False
+) -> tuple[bytes, list[str]]:
     actions: list[str] = []
     budget = _ZipBudget()
     out_buf = io.BytesIO()
@@ -457,6 +519,16 @@ def clean_docx(data: bytes) -> tuple[bytes, list[str]]:
             if name.startswith("customXml/"):
                 actions.append(f"drop part {name}")
                 continue
+            if name.endswith(".rels"):
+                text = raw.decode("utf-8", errors="surrogateescape")
+                new, n = _CUSTOMXML_REL_RE.subn("", text)
+                if n:
+                    actions.append(f"drop {n} customXml relationship(s) in {name}")
+                    raw = new.encode("utf-8", errors="surrogateescape")
+            if _docx_prose(name):
+                raw = _apply_layer_a_xml(
+                    raw, actions, nfkc=nfkc, aggressive_homoglyphs=aggressive_homoglyphs
+                )
             if name in DOCX_META_PARTS or name.startswith("docProps/"):
                 text = raw.decode("utf-8", errors="replace")
                 # Scrub known AI generator fields via simple regex on XML text nodes
@@ -555,7 +627,9 @@ def inspect_odt(data: bytes) -> tuple[bool, bool, list[str], dict]:
     return has_c2pa, has_ai or has_c2pa, findings, {}
 
 
-def clean_odt(data: bytes) -> tuple[bytes, list[str]]:
+def clean_odt(
+    data: bytes, *, nfkc: bool = False, aggressive_homoglyphs: bool = False
+) -> tuple[bytes, list[str]]:
     actions: list[str] = []
     budget = _ZipBudget()
     out_buf = io.BytesIO()
@@ -565,6 +639,10 @@ def clean_odt(data: bytes) -> tuple[bytes, list[str]]:
         for info in zin.infolist():
             name = info.filename
             raw = budget.read(zin, info)
+            if name == "content.xml":
+                raw = _apply_layer_a_xml(
+                    raw, actions, nfkc=nfkc, aggressive_homoglyphs=aggressive_homoglyphs
+                )
             if name == "meta.xml":
                 text = raw.decode("utf-8", errors="replace")
                 new, n = re.subn(
@@ -632,6 +710,86 @@ def inspect_pdf(path: Path, data: bytes) -> tuple[bool, bool, list[str], dict]:
     return has_c2pa, has_ai or has_c2pa, findings, {"tools": tools}
 
 
+def _pdf_name(value: object) -> str:
+    if value is None:
+        return ""
+    return str(value).lstrip("/")
+
+
+def _filespec_is_c2pa(spec: object) -> bool:
+    """C2PA spec A.4: a manifest store is an embedded file with this relationship or subtype."""
+    if spec is None or not hasattr(spec, "get"):
+        return False
+    if _pdf_name(spec.get("/AFRelationship")) == "C2PA_Manifest":
+        return True
+    ef = spec.get("/EF")
+    if ef is None:
+        return False
+    for key in ("/F", "/UF"):
+        stream = ef.get(key)
+        if stream is not None and _pdf_name(stream.get("/Subtype")) == "application/c2pa":
+            return True
+    return False
+
+
+def _strip_af(obj: object, actions: list[str], where: str) -> None:
+    import pikepdf
+
+    if obj is None or "/AF" not in obj:
+        return
+    af = obj["/AF"]
+    items = list(af) if isinstance(af, pikepdf.Array) else [af]
+    kept = [item for item in items if not _filespec_is_c2pa(item)]
+    if len(kept) == len(items):
+        return
+    actions.append(f"pikepdf: drop C2PA associated file on {where}")
+    if kept:
+        obj["/AF"] = pikepdf.Array(kept)
+    else:
+        del obj["/AF"]
+
+
+def _strip_pdf_c2pa(pdf: object, actions: list[str]) -> None:
+    import pikepdf
+
+    root = pdf.Root
+    _strip_af(root, actions, "catalog")
+    names = root.get("/Names")
+    if names is not None and "/EmbeddedFiles" in names:
+        tree = pikepdf.NameTree(names["/EmbeddedFiles"])
+        for key in list(tree):
+            if _filespec_is_c2pa(tree[key]):
+                del tree[key]
+                actions.append(f"pikepdf: drop C2PA embedded file {key}")
+        if len(tree) == 0:
+            del names["/EmbeddedFiles"]
+    for i, page in enumerate(pdf.pages):
+        obj = page.obj
+        _strip_af(obj, actions, f"page {i}")
+        resources = obj.get("/Resources")
+        xobjects = resources.get("/XObject") if resources is not None else None
+        if xobjects is not None:
+            for xname, xo in xobjects.items():
+                _strip_af(xo, actions, f"page {i} xobject {xname}")
+        if "/Annots" not in obj:
+            continue
+        kept = []
+        dropped = False
+        for annot in obj["/Annots"]:
+            fs = annot.get("/FS")
+            if _pdf_name(annot.get("/Subtype")) == "FileAttachment" and _filespec_is_c2pa(fs):
+                dropped = True
+                continue
+            _strip_af(annot, actions, f"page {i} annotation")
+            kept.append(annot)
+        if dropped:
+            actions.append(f"pikepdf: drop C2PA file attachment on page {i}")
+            if kept:
+                obj["/Annots"] = pikepdf.Array(kept)
+            else:
+                del obj["/Annots"]
+
+
 def _pikepdf_clean(path: Path, dest: Path, actions: list[str]) -> bool:
     """Strip PDF metadata and rewrite the file. Returns True when it ran.
 
@@ -650,6 +808,7 @@ def _pikepdf_clean(path: Path, dest: Path, actions: list[str]) -> bool:
             if "/Metadata" in pdf.Root:
                 del pdf.Root["/Metadata"]
                 actions.append("pikepdf: drop XMP metadata")
+            _strip_pdf_c2pa(pdf, actions)
             for i, page in enumerate(pdf.pages):
                 if "/Metadata" in page.obj:
                     del page.obj["/Metadata"]
@@ -798,15 +957,16 @@ def clean_container(
     dest: Path,
     *,
     also_layer_a_text: bool = True,
+    nfkc: bool = False,
+    aggressive_homoglyphs: bool = False,
 ) -> dict[str, Any]:
-    """Clean container metadata; optionally Layer-A scrub text bodies for md/html."""
-    from text_unicode import clean_text  # local import to avoid cycles
-
+    """Clean container metadata. Layer A also runs on HTML, Markdown, and document text."""
     data = path.read_bytes()
     fmt = detect_container_format(path, data)
     actions: list[str] = []
     dest.parent.mkdir(parents=True, exist_ok=True)
     meta: dict[str, Any] = {"format": fmt}
+    text_flags = {"nfkc": nfkc, "aggressive_homoglyphs": aggressive_homoglyphs}
 
     if fmt == "svg":
         cleaned, actions = clean_svg(data)
@@ -815,32 +975,20 @@ def clean_container(
         actions, meta_extra = clean_pdf(path, dest)
         meta.update(meta_extra)
     elif fmt == "docx":
-        cleaned, actions = clean_docx(data)
+        cleaned, actions = clean_docx(data, **text_flags)
         dest.write_bytes(cleaned)
     elif fmt == "odt":
-        cleaned, actions = clean_odt(data)
+        cleaned, actions = clean_odt(data, **text_flags)
         dest.write_bytes(cleaned)
     elif fmt == "html":
         text = data.decode("utf-8", errors="surrogateescape")
         text, actions = clean_html(text)
-        if also_layer_a_text:
-            text2, stats = clean_text(text)
-            if stats["removed_count"] or stats["replaced_count"]:
-                actions.append(
-                    f"layer A text: removed={stats['removed_count']} replaced={stats['replaced_count']}"
-                )
-                text = text2
+        text = _scrub_prose(text, actions, also_layer_a_text, text_flags)
         write_text_file(dest, text)
     elif fmt == "markdown":
         text = data.decode("utf-8", errors="surrogateescape")
         text, actions = clean_markdown(text)
-        if also_layer_a_text:
-            text2, stats = clean_text(text)
-            if stats["removed_count"] or stats["replaced_count"]:
-                actions.append(
-                    f"layer A text: removed={stats['removed_count']} replaced={stats['replaced_count']}"
-                )
-                text = text2
+        text = _scrub_prose(text, actions, also_layer_a_text, text_flags)
         write_text_file(dest, text)
     else:
         raise ValueError(f"unsupported container format: {fmt}")

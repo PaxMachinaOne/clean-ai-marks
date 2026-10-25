@@ -112,21 +112,20 @@ def inspect_png(data: bytes) -> tuple[bool, bool, list[str]]:
         if ctype in (b"caBX", b"juMB", b"jumb") or ctype.startswith(b"c2"):
             has_c2pa = True
             findings.append(f"PNG chunk {name} (possible C2PA container)")
-        if ctype in (b"tEXt", b"zTXt", b"iTXt", b"eXIf"):
+        elif ctype != b"IDAT":
+            # IDAT is compressed pixels. Short needles like "jumb" match there by chance.
             hits = _contains_any(payload, AI_META_HINTS + C2PA_MARKERS)
             if hits:
                 has_ai = True
-                if any(h.lower() in ("c2pa", "contentcredentials", "jumb") for h in hits):
+                if any(
+                    h.lower() in ("c2pa", "contentcredentials", "jumb", "contentauth")
+                    for h in hits
+                ):
                     has_c2pa = True
                 findings.append(f"PNG {name}: {', '.join(hits[:8])}")
         if ctype == b"IEND":
             break
         pos = chunk_end + 4  # skip CRC
-    # Whole-file scan fallback
-    whole = _contains_any(data, C2PA_MARKERS)
-    if whole and not has_c2pa:
-        has_c2pa = True
-        findings.append(f"byte-scan C2PA markers: {', '.join(whole[:6])}")
     return has_c2pa, has_ai or has_c2pa, findings
 
 
@@ -179,10 +178,6 @@ def inspect_jpeg(data: bytes) -> tuple[bool, bool, list[str]]:
                     has_c2pa = True
                 findings.append(f"JPEG APP{marker - 0xE0}: {', '.join(hits[:8])}")
 
-    whole = _contains_any(data, C2PA_MARKERS)
-    if whole and not has_c2pa:
-        has_c2pa = True
-        findings.append(f"byte-scan C2PA markers: {', '.join(whole[:6])}")
     return has_c2pa, has_ai or has_c2pa, findings
 
 
@@ -208,6 +203,14 @@ def _c2pa_python_probe(path: Path) -> dict[str, Any] | None:
         }
 
 
+def c2patool_has_manifest(out: str) -> bool:
+    """A negative c2patool report still contains the words it is denying."""
+    lower = out.lower()
+    if any(phrase in lower for phrase in ("no claim", "no jumbf", "no manifest")):
+        return False
+    return any(word in lower for word in ("claim", "c2pa", "manifest"))
+
+
 def run_optional_tools(path: Path) -> dict[str, Any]:
     tools: dict[str, Any] = {}
     c2patool = which("c2patool")
@@ -224,11 +227,7 @@ def run_optional_tools(path: Path) -> dict[str, Any]:
                 "available": True,
                 "returncode": r.returncode,
                 "snippet": out[:2000],
-                "has_manifest": "claim" in out.lower()
-                or "c2pa" in out.lower()
-                or "manifest" in out.lower()
-                and "no claim" not in out.lower()
-                and "no jumbf" not in out.lower(),
+                "has_manifest": c2patool_has_manifest(out),
             }
         except Exception as e:
             tools["c2patool"] = {"available": True, "error": str(e)}

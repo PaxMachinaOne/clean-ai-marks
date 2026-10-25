@@ -106,6 +106,30 @@ def test_inspect_exits_zero_on_clean_input(script: str, tmp_path: Path):
     assert r.returncode == common.EXIT_OK, r.stdout
 
 
+def test_clean_file_nfkc_reaches_markdown(tmp_path: Path):
+    src = tmp_path / "note.md"
+    src.write_text("ﬁle\n", encoding="utf-8")
+    dest = tmp_path / "note.cleaned.md"
+
+    r = run("clean_file.py", str(src), "-o", str(dest), "--nfkc")
+
+    assert r.returncode == common.EXIT_OK, r.stderr
+    assert dest.read_text(encoding="utf-8") == "file\n"
+
+
+def test_clean_file_corrupt_inputs_exit_bad_input(tmp_path: Path):
+    image = tmp_path / "bad.png"
+    image.write_bytes(b"not a png")
+    docx = tmp_path / "bad.docx"
+    docx.write_bytes(b"PK\x03\x04not a zip")
+
+    image_run = run("clean_file.py", str(image), "-o", str(tmp_path / "out.png"))
+    docx_run = run("clean_file.py", str(docx), "-o", str(tmp_path / "out.docx"))
+
+    assert image_run.returncode == common.EXIT_BAD_INPUT, image_run.stderr
+    assert docx_run.returncode == common.EXIT_BAD_INPUT, docx_run.stderr
+
+
 @pytest.mark.parametrize(
     "fixture", ["sample_watermarked.txt", "sample_ai.md", "sample_ai.html", "sample_meta.svg"]
 )

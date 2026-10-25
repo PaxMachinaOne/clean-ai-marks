@@ -86,6 +86,7 @@ Two separate install paths. Do not confuse them:
 | Statistical text watermark | Reduced, not provably gone |
 | C2PA **soft binding** | No (survives by design) |
 | Pixel / audio / video watermarks (SynthID-media) | No |
+| Visible overlays (logos, stock stamps) | No |
 | Data-driven model backdoors | No |
 
 A clean does not mean no AI provenance remains. Check the residual-risk table in the

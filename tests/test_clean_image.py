@@ -11,7 +11,14 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "skills" / "clean-ai-marks" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-from image_meta import clean_image, inspect_image, strip_jpeg, strip_png  # noqa: E402
+from image_meta import (  # noqa: E402
+    c2patool_has_manifest,
+    clean_image,
+    inspect_jpeg,
+    inspect_png,
+    strip_jpeg,
+    strip_png,
+)
 
 
 def _png_chunk(ctype: bytes, payload: bytes) -> bytes:
@@ -65,6 +72,61 @@ def test_strip_jpeg_removes_app11():
     assert b"c2pa-manifest-fake" not in cleaned
     assert any("APP11" in a or "drop" in a for a in actions)
     assert cleaned.startswith(b"\xff\xd8")
+
+
+def test_png_idat_bytes_are_not_c2pa():
+    sig = b"\x89PNG\r\n\x1a\n"
+    ihdr = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+    data = (
+        sig
+        + _png_chunk(b"IHDR", ihdr)
+        + _png_chunk(b"IDAT", b"xxjumb cai: c2pa yy")
+        + _png_chunk(b"IEND", b"")
+    )
+
+    has_c2pa, has_ai, findings = inspect_png(data)
+
+    assert not has_c2pa
+    assert not has_ai
+    assert findings == []
+
+
+def test_jpeg_scan_bytes_are_not_c2pa():
+    app0 = b"JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
+    app0_seg = b"\xff\xe0" + struct.pack(">H", len(app0) + 2) + app0
+    sos_payload = b"\x03\x01\x00\x02\x11\x03\x11\x00\x3f\x00"
+    sos = b"\xff\xda" + struct.pack(">H", len(sos_payload) + 2) + sos_payload
+    data = b"\xff\xd8" + app0_seg + sos + b"\x00jumb c2pa cai:" + b"\xff\xd9"
+
+    has_c2pa, has_ai, _findings = inspect_jpeg(data)
+
+    assert not has_c2pa
+    assert not has_ai
+
+
+def test_c2patool_negative_report_is_not_a_manifest():
+    assert c2patool_has_manifest("Error: No claim found\nc2pa") is False
+    assert c2patool_has_manifest('{"claim_generator":"test","manifest":{}}') is True
+
+
+def test_clean_png_idat_noise_is_not_residual_c2pa(tmp_path: Path):
+    sig = b"\x89PNG\r\n\x1a\n"
+    ihdr = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+    data = (
+        sig
+        + _png_chunk(b"IHDR", ihdr)
+        + _png_chunk(b"tEXt", b"Comment\x00c2pa contentcredentials")
+        + _png_chunk(b"IDAT", b"xxjumb cai: yy")
+        + _png_chunk(b"IEND", b"")
+    )
+    src = tmp_path / "t.png"
+    src.write_bytes(data)
+    dest = tmp_path / "t.cleaned.png"
+
+    result = clean_image(src, dest)
+
+    assert result["still_has_c2pa"] is False
+    assert result["still_has_ai_metadata"] is False
 
 
 def test_clean_image_roundtrip(tmp_path: Path):
