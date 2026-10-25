@@ -128,7 +128,7 @@ Makefile            tools / test / smoke / install-skill / clean
 | `tools` | Creates `skills/clean-ai-marks/.venv` and installs the optional extras |
 | `test` | Runs pytest |
 | `smoke` | Drives the CLI end to end over `tests/fixtures` |
-| `install-skill` | Symlinks the skill into `~/.grok/skills/` |
+| `install-skill` | Symlinks the skill into `~/.grok/skills/` (`SKILLS_DIR` overrides that directory) |
 | `clean` | Drops `__pycache__`, `.pytest_cache`, and both venvs |
 
 ## Dependencies
