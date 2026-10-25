@@ -9,7 +9,7 @@
 | PDF XMP / info / C2PA associated file | pikepdf strip + rewrite (else exiftool + qpdf) | `clean_file.py` | Loses PDF metadata and C2PA embedded manifests; degraded (exit 3) without a rewriter | Partial |
 | DOCX props / customXml / body Unicode | Rewrite OOXML zip, drop customXml relationships, Layer A on text nodes | `clean_file.py` | Loses doc properties and invisible characters in the text | Yes |
 | ODT meta:generator / body Unicode | Scrub `meta.xml`, Layer A on `content.xml` text | `clean_file.py` | Loses generator tag and invisible characters in the text | Yes |
-| HTML generator / JSON-LD provenance | Strip tags | `clean_file.py` | Loses meta | Yes |
+| HTML AI generator / provenance JSON-LD / `data-ai*` | Strip those tags | `clean_file.py` | Description, Open Graph, a CMS generator, and ordinary JSON-LD stay | Yes |
 | Markdown AI frontmatter keys | Drop provenance key names | `clean_file.py` | Title and description stay, including when they mention a vendor | Yes |
 | Pixel / audio / video watermarks (SynthID-media) | - | Out of scope. Regeneration needs a generative denoiser; a blur is not a substitute | - | - |
 | Visible overlays (logos, stock stamps) | - | Out of scope. Single-image removal does not recover the pixels underneath | - | - |
