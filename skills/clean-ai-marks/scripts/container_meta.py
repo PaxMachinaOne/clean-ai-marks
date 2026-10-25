@@ -195,11 +195,6 @@ def inspect_markdown(text: str) -> tuple[bool, bool, list[str], dict]:
         if key.lower() in AI_FRONTMATTER_KEYS or AI_META_NAME_RE.search(key):
             has_ai = True
             findings.append(f"frontmatter key: {key}")
-        # also check value
-        val = _line.split(":", 1)[1] if ":" in _line else ""
-        if AI_META_NAME_RE.search(val):
-            has_ai = True
-            findings.append(f"frontmatter value hit on {key}")
     c2pa = any("c2pa" in f.lower() or "content" in f.lower() for f in findings)
     return c2pa, has_ai, findings, {"has_frontmatter": True, "keys": keys}
 
@@ -229,9 +224,6 @@ def clean_markdown(text: str) -> tuple[str, list[str]]:
         key = km.group(1)
         if key.lower() in AI_FRONTMATTER_KEYS or AI_META_NAME_RE.search(key):
             actions.append(f"drop frontmatter key: {key}")
-            parent_dropped = True
-        elif AI_META_NAME_RE.search(line.split(":", 1)[1]):
-            actions.append(f"drop frontmatter key (value hit): {key}")
             parent_dropped = True
         else:
             kept.append(line)

@@ -71,7 +71,7 @@ For code, prefer a formatter (`prettier`, `black`, `gofmt`) plus Layer A; statis
 | PDF | XMP, document info, and C2PA associated-file manifests (`pikepdf`, else `qpdf`) |
 | DOCX / ODT | Document properties, `customXml` (parts and relationships), `meta:generator`, invisible Unicode in the text |
 | HTML | `meta` generator, JSON-LD provenance, `data-ai*` |
-| Markdown | AI keys in YAML frontmatter |
+| Markdown | Provenance key names in YAML frontmatter. A title or description that mentions a vendor stays |
 
 ## Exit codes
 
