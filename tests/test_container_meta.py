@@ -101,7 +101,37 @@ def test_html_meta_strip():
     assert "ChatGPT" not in cleaned
     assert "viewport" in cleaned
     assert "data-ai-model" not in cleaned
+    assert "description" in cleaned
     assert any("drop" in a for a in actions)
+
+
+def test_html_keeps_prose_meta_and_drops_provenance():
+    html = (
+        '<meta name="description" content="A review of Claude for writing">'
+        '<meta property="og:title" content="Gemini vs Claude benchmark">'
+        '<meta name="generator" content="Blogger">'
+        '<meta name="generator" content="ChatGPT">'
+        '<script type="application/ld+json">'
+        '{"@type":"BlogPosting","headline":"Notes on the OpenAI API"}'
+        "</script>"
+        '<script type="application/ld+json">'
+        '{"digitalSourceType":"trainedAlgorithmicMedia"}'
+        "</script>"
+        '<meta name="viewport" content="width=device-width">'
+    )
+
+    _c2, has_ai, findings, _ = inspect_html(html)
+    cleaned, _actions = clean_html(html)
+
+    assert has_ai
+    assert "A review of Claude for writing" in cleaned
+    assert "Gemini vs Claude benchmark" in cleaned
+    assert 'content="Blogger"' in cleaned
+    assert "ChatGPT" not in cleaned
+    assert "Notes on the OpenAI API" in cleaned
+    assert "trainedAlgorithmicMedia" not in cleaned
+    assert "viewport" in cleaned
+    assert not any("description" in f or "og:title" in f or "Blogger" in f for f in findings)
 
 
 def test_svg_drops_generator_attrs_with_metadata():

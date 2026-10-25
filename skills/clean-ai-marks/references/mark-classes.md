@@ -49,7 +49,7 @@ Industry framing (C2PA + SynthID two-layer model; the public write-up is linked 
 | SVG | Drop metadata/XMP blocks |
 | PDF | pikepdf drops document info, XMP, and C2PA associated-file manifests, then rewrites. Else exiftool plus qpdf. Else a degraded XMP cut (exit 3). |
 | DOCX / ODT | Scrub zip XML props / customXml (including relationships). Layer A runs on text nodes. |
-| HTML | Meta generator / JSON-LD / data-ai* |
+| HTML | AI generator meta, provenance JSON-LD, data-ai*. Description, Open Graph, and a CMS generator stay |
 | Markdown | Provenance key names. A title or description that mentions a vendor stays |
 
 **Removal:** `clean_file.py` / `clean_image.py`, usually verifiable by re-inspect.

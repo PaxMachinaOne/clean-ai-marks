@@ -251,6 +251,51 @@ _JSONLD_RE = re.compile(
     r"<script\b[^>]*type\s*=\s*[\"']application/ld\+json[\"'][^>]*>.*?</script>",
     re.I | re.DOTALL,
 )
+_AI_TOOL_RE = re.compile(
+    r"claude|anthropic|openai|chatgpt|\bgpt[-\d]|gemini|synthid",
+    re.I,
+)
+_PROVENANCE_NAME_RE = re.compile(
+    r"ai[-_ ]?generated|claude|anthropic|openai|chatgpt|gemini|synthid|"
+    r"c2pa|content.?credential|provenance|digital.?source|aigc",
+    re.I,
+)
+_JSONLD_PROVENANCE_RE = re.compile(
+    r"""["'](?:digitalSourceType|trainedAlgorithmicMedia|"""
+    r"""compositeWithTrainedAlgorithmicMedia|c2pa|contentCredentials)["']""",
+    re.I,
+)
+
+
+def _attr(tag: str, attr: str) -> str:
+    m = re.search(rf"""\b{attr}\s*=\s*(["'])(.*?)\1""", tag, re.I | re.DOTALL)
+    return m.group(2) if m else ""
+
+
+def _meta_names(tag: str) -> str:
+    return " ".join(
+        _attr(tag, attr) for attr in ("name", "property", "itemprop", "http-equiv")
+    ).strip()
+
+
+def _meta_is_provenance(tag: str) -> tuple[bool, bool]:
+    """Match the meta name or property, not the content. Generator drops only for an AI tool."""
+    names = _meta_names(tag)
+    if not names:
+        return False, False
+    if re.search(r"\bgenerator\b", names, re.I):
+        if _AI_TOOL_RE.search(_attr(tag, "content")):
+            return True, False
+        names = re.sub(r"\bgenerator\b", "", names, flags=re.I).strip()
+        if not names:
+            return False, False
+    if _PROVENANCE_NAME_RE.search(names):
+        return True, bool(re.search(r"c2pa|content.?credential", names, re.I))
+    return False, False
+
+
+def _jsonld_is_provenance(blob: str) -> bool:
+    return _JSONLD_PROVENANCE_RE.search(blob) is not None
 
 
 def inspect_html(text: str) -> tuple[bool, bool, list[str], dict]:
@@ -258,18 +303,15 @@ def inspect_html(text: str) -> tuple[bool, bool, list[str], dict]:
     has_ai = False
     has_c2pa = False
     for tag in _META_TAG_RE.findall(text):
-        if AI_META_NAME_RE.search(tag) or any(
-            h.decode("ascii", "ignore").lower() in tag.lower() for h in AI_META_HINTS[:12]
-        ):
+        drop, c2pa = _meta_is_provenance(tag)
+        if drop:
             has_ai = True
             findings.append(f"meta: {tag[:120]}")
-            if re.search(r"c2pa|content.?credential", tag, re.I):
+            if c2pa:
                 has_c2pa = True
     for m in _JSONLD_RE.finditer(text):
         blob = m.group(0)
-        if AI_META_NAME_RE.search(blob) or re.search(
-            r"DigitalSourceType|trainedAlgorithmicMedia|SoftwareAgent", blob, re.I
-        ):
+        if _jsonld_is_provenance(blob):
             has_ai = True
             findings.append("json-ld provenance-like block")
             if re.search(r"c2pa|contentcredential", blob, re.I):
@@ -286,9 +328,7 @@ def clean_html(text: str) -> tuple[str, list[str]]:
 
     def _meta_sub(m: re.Match[str]) -> str:
         tag = m.group(0)
-        if AI_META_NAME_RE.search(tag) or re.search(
-            r"generator|claude|anthropic|openai|gemini|synthid|c2pa|aigc", tag, re.I
-        ):
+        if _meta_is_provenance(tag)[0]:
             actions.append(f"drop meta: {tag[:80]}")
             return ""
         return tag
@@ -297,9 +337,7 @@ def clean_html(text: str) -> tuple[str, list[str]]:
 
     def _jsonld_sub(m: re.Match[str]) -> str:
         blob = m.group(0)
-        if AI_META_NAME_RE.search(blob) or re.search(
-            r"DigitalSourceType|trainedAlgorithmicMedia|SoftwareAgent", blob, re.I
-        ):
+        if _jsonld_is_provenance(blob):
             actions.append("drop json-ld provenance-like script")
             return ""
         return blob
