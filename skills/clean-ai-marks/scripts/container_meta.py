@@ -97,6 +97,7 @@ class ContainerInspectReport:
     findings: list[str] = field(default_factory=list)
     tools: dict[str, Any] = field(default_factory=dict)
     details: dict[str, Any] = field(default_factory=dict)
+    error: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -107,6 +108,7 @@ class ContainerInspectReport:
             "findings": self.findings,
             "tools": self.tools,
             "details": self.details,
+            "error": self.error,
         }
 
 
@@ -526,7 +528,7 @@ def inspect_docx(data: bytes) -> tuple[bool, bool, list[str], dict]:
             if custom:
                 findings.append(f"customXml parts: {len(custom)}")
     except zipfile.BadZipFile:
-        return False, False, ["not a valid DOCX zip"], {}
+        return False, False, ["not a valid DOCX zip"], {"error": "not a valid DOCX zip"}
     except ZipTooLarge as e:
         findings.append(f"refused oversized zip content: {e}")
         return has_c2pa, True, findings, {"parts": len(parts), "oversized": True}
@@ -650,7 +652,7 @@ def inspect_odt(data: bytes) -> tuple[bool, bool, list[str], dict]:
                     has_ai = True
                     findings.append("meta.xml generator-like fields")
     except zipfile.BadZipFile:
-        return False, False, ["not a valid ODT zip"], {}
+        return False, False, ["not a valid ODT zip"], {"error": "not a valid ODT zip"}
     except ZipTooLarge as e:
         findings.append(f"refused oversized zip content: {e}")
         return has_c2pa, True, findings, {"oversized": True}
@@ -950,6 +952,7 @@ def inspect_container(path: Path) -> ContainerInspectReport:
     tools: dict[str, Any] = {}
     details: dict[str, Any] = {}
 
+    error = ""
     if fmt == "svg":
         has_c2pa, has_ai, findings, details = inspect_svg(data)
     elif fmt == "pdf":
@@ -967,6 +970,10 @@ def inspect_container(path: Path) -> ContainerInspectReport:
         has_c2pa, has_ai, findings, details = inspect_markdown(text)
     else:
         has_c2pa, has_ai, findings = False, False, [f"unsupported container: {fmt}"]
+        error = findings[0]
+
+    if isinstance(details, dict) and details.get("error"):
+        error = str(details.pop("error"))
 
     if fmt in ("svg", "pdf", "docx") and not tools:
         tools = run_optional_tools(path)
@@ -979,6 +986,7 @@ def inspect_container(path: Path) -> ContainerInspectReport:
         findings=findings,
         tools=tools,
         details=details,
+        error=error,
     )
 
 

@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from common import emit_json  # noqa: E402
+from common import EXIT_BAD_INPUT, EXIT_ERROR, EXIT_OK, emit_json  # noqa: E402
 from image_meta import inspect_image  # noqa: E402
 
 
@@ -21,7 +21,7 @@ def main() -> int:
 
     if not args.path.is_file():
         print(f"not a file: {args.path}", file=sys.stderr)
-        return 2
+        return EXIT_BAD_INPUT
 
     report = inspect_image(args.path)
     if args.json:
@@ -44,7 +44,9 @@ def main() -> int:
             for line in et["interesting_lines"][:20]:
                 print(f"  {line}")
 
-    return 0 if not (report.has_c2pa or report.has_ai_metadata) else 1
+    if report.error:
+        return EXIT_BAD_INPUT
+    return EXIT_OK if not (report.has_c2pa or report.has_ai_metadata) else EXIT_ERROR
 
 
 if __name__ == "__main__":

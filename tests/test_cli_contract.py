@@ -117,6 +117,29 @@ def test_clean_file_nfkc_reaches_markdown(tmp_path: Path):
     assert dest.read_text(encoding="utf-8") == "file\n"
 
 
+def test_unreadable_or_unsupported_input_exits_bad_input(tmp_path: Path):
+    broken = tmp_path / "broken.docx"
+    broken.write_bytes(b"not a zip")
+    text = tmp_path / "t.txt"
+    text.write_text("hello\n", encoding="utf-8")
+    weird = tmp_path / "a.weird"
+    weird.write_bytes(b"xyz")
+    bad_png = tmp_path / "bad.png"
+    bad_png.write_bytes(b"not a png")
+
+    cases = [
+        ("clean_image.py", [str(text), "-o", str(tmp_path / "out.jpg")]),
+        ("clean_file.py", [str(text), "--as", "image", "-o", str(tmp_path / "forced.jpg")]),
+        ("inspect_file.py", [str(broken)]),
+        ("inspect_file.py", [str(weird), "--as", "container"]),
+        ("inspect_file.py", [str(bad_png)]),
+        ("inspect_image.py", [str(text)]),
+    ]
+    for script, args in cases:
+        result = run(script, *args)
+        assert result.returncode == common.EXIT_BAD_INPUT, (script, result.returncode, result.stderr, result.stdout)
+
+
 def test_clean_file_corrupt_inputs_exit_bad_input(tmp_path: Path):
     image = tmp_path / "bad.png"
     image.write_bytes(b"not a png")

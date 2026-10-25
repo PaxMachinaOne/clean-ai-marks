@@ -61,6 +61,9 @@ def main() -> int:
             dest,
             strip_all_metadata=not args.keep_non_ai_metadata,
         )
+    except (OSError, ValueError) as e:
+        eprint(f"error: {e}")
+        return EXIT_BAD_INPUT
     except Exception as e:
         eprint(f"error: {e}")
         return EXIT_ERROR
