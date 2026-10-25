@@ -21,7 +21,7 @@ Maps to Nature paper “edit-based watermarking.”
 
 Bias next-token sampling toward a pseudo-random green list / score (Kirchenbauer, SynthID-Text / Tournament sampling, etc.). Signal lives in **word choice**, not metadata.
 
-**Removal:** Layer B rewrite (paraphrase → back-translate → structural). Best-effort; no gold cert without vendor detector/key.
+**This is the job of the skill.** Layer B scrambles and blurs the signal (lexical paraphrase, back-translate, or outline plus a new sentence order). No gold certificate without the vendor detector or key.
 
 Maps to Nature paper primary method (SynthID-Text).
 
@@ -35,7 +35,7 @@ Model trained or fine-tuned so trigger prompts produce marked or identifiable be
 
 Signed Content Credentials and AI generator tags in containers (hard-bound to the file: JUMBF/APP11, PNG chunks, XMP packets, OOXML props, etc.).
 
-Industry framing (C2PA + SynthID two-layer model; see Institute of AI PM guide in README references):
+Industry framing (C2PA + SynthID two-layer model; the public write-up is linked from `vendor-notes.md`):
 
 | Layer | Mechanism | Survives metadata strip? | This project |
 | --- | --- | --- | --- |

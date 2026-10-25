@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Layer B optional rewrite hook for statistical (token-sampling) watermarks.
+"""Scramble and blur a statistical (token-sampling) watermark.
 
 Backends:
   print-prompt       — emit prompt only (default; CI-safe, no model)
@@ -38,27 +38,31 @@ from text_unicode import clean_text  # noqa: E402
 
 # Single-shot instructions, one per --strength. The multi-step variants in SKILL.md
 # are agent-orchestrated and deliberately not modelled here.
-# Query-free scrub of a sampling watermark is a paraphrase. DIPPER's published knobs
-# are lexical diversity (wording, stable order) and order diversity (split, merge,
-# reorder). Back-translation is the other attack in the Kirchenbauer robustness eval.
-# Neither certifies removal: unigram watermarks often survive one paraphrase.
+# The job is the statistical signal: scramble token choice, which blurs the
+# green-list score. DIPPER's knobs are lexical diversity (wording, stable order)
+# and order diversity. Back-translation is the other Kirchenbauer robustness attack.
+# A unigram watermark often survives one pass. Do not tell the model to claim success.
+_JOB = (
+    "The text may carry a statistical sampling watermark in its token choices. "
+    "Scramble and blur that statistical signal. "
+)
 PROMPTS = {
     "paraphrase": (
-        "Rewrite the following text with high lexical diversity. Change the words in "
-        "every sentence and keep the sentence order. Preserve all facts, numbers, names, "
-        "and technical identifiers. Do not add or remove claims. Output only the rewritten "
-        "text.\n\n---\n{TEXT}"
+        _JOB + "Rewrite it with high lexical diversity. Change the words in every sentence "
+        "and keep the sentence order. Preserve all facts, numbers, names, and technical "
+        "identifiers. Do not add or remove claims. Output only the rewritten text.\n\n---\n{TEXT}"
     ),
     "backtranslate": (
-        "Translate the text to {LANG}, then translate that result back to {ORIGINAL_LANG}. "
-        "Preserve all facts, numbers, and names. Output only the final {ORIGINAL_LANG} "
-        "text.\n\n---\n{TEXT}"
+        _JOB + "Do it by translating the text to {LANG}, then translating that result "
+        "back to {ORIGINAL_LANG}. Preserve all facts, numbers, and names. Output only "
+        "the final {ORIGINAL_LANG} text.\n\n---\n{TEXT}"
     ),
     "structural": (
-        "First extract a bullet outline of all claims (no full sentences). Then write a "
-        "complete document from that outline. Use different wording and a different "
-        "sentence order from the source, and do not omit any bullet. Preserve all facts, "
-        "numbers, names, and technical identifiers. Output only the final document.\n\n---\n{TEXT}"
+        _JOB + "First extract a bullet outline of all claims (no full sentences). Then "
+        "write a complete document from that outline. Use different wording and a "
+        "different sentence order from the source, and do not omit any bullet. Preserve "
+        "all facts, numbers, names, and technical identifiers. Output only the final "
+        "document.\n\n---\n{TEXT}"
     ),
 }
 

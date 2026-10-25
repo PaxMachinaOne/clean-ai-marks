@@ -38,6 +38,13 @@ def test_print_prompt_backend():
     assert info["backend"] == "print-prompt"
 
 
+def test_every_strength_scrambles_the_statistical_signal():
+    for strength in PROMPTS:
+        prompt = build_prompt(strength, "Hello.", lang="French", original_lang="English")
+        assert "statistical sampling watermark" in prompt
+        assert "Scramble and blur that statistical signal." in prompt
+
+
 def test_prompts_match_the_published_paraphrase_attacks():
     lexical = build_prompt("paraphrase", "Hello.", lang="French", original_lang="English")
     structural = build_prompt("structural", "Hello.", lang="French", original_lang="English")

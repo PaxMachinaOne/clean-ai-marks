@@ -1,10 +1,13 @@
 # clean-ai-marks
 
-An agent skill that strips machine-readable AI provenance marks from text and files.
+An agent skill whose job is to scramble and blur **statistical text watermarks**: the token-sampling signal (green-list, SynthID-Text, Claude's embedded text watermark, and the same class). The signal lives in word choice. A rewrite changes that choice. It does not certify that a detector with the vendor key will miss it.
 
-- **Layer A**: invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic, verifiable.
-- **Layer B**: statistical token-sampling watermarks, reduced by rewrite. Best-effort.
+The same tools also strip marks that ride along with the text:
+
+- **Layer A**: invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic, verifiable. This is not the statistical watermark.
 - **Metadata**: C2PA / EXIF / XMP / document properties on PNG, JPEG, SVG, PDF, DOCX, ODT, HTML, Markdown.
+
+Pixel, audio, video, and visible watermarks are a different thing and are not this tool.
 
 Covers Claude, Gemini / SynthID-class, OpenAI, and open-LLM marks.
 

@@ -1,13 +1,15 @@
 ---
 name: clean-ai-marks
 description: >
-  Remove multi-vendor AI provenance marks: invisible Unicode (Layer A), statistical
-  text watermarks via rewrite (Layer B, always offer), and C2PA/EXIF/XMP/container
-  metadata on PNG/JPEG/SVG/PDF/DOCX/ODT/HTML/MD. Covers Claude, Gemini/SynthID-class,
-  OpenAI provenance, and open-LLM sampling marks. Use when the user asks to strip
-  watermarks, remove C2PA/Content Credentials, clean AI metadata, remove invisible
-  Unicode, anti-detect clean AI output, or runs /clean-ai-marks (aliases:
-  /remove-ai-marks, /remove-claude-marks).
+  Scramble and blur statistical text watermarks (token-sampling: green-list,
+  SynthID-Text, Claude's embedded text watermark, open-LLM sampling marks).
+  That is the job: Layer B rewrite changes token choice so the sampling signal
+  is scrambled and blurred. Also strips invisible Unicode and C2PA/EXIF/XMP
+  container metadata. Does not touch pixel, audio, video, or visible watermarks.
+  Use when the user asks to scramble or blur a statistical watermark, strip
+  watermarks, remove C2PA/Content Credentials, clean AI metadata, remove
+  invisible Unicode, or runs /clean-ai-marks (aliases: /remove-ai-marks,
+  /remove-claude-marks).
 ---
 
 # Clean AI marks
@@ -29,8 +31,9 @@ SCRIPTS="<absolute path of this skill>/scripts"
   a tool error.
 - Exit 3 means **degraded**: output not fully cleaned. Always tell the user.
 - Write `*.cleaned.*` by default. Use `--in-place` only when asked.
-- Always offer Layer B for prose. Never skip it silently.
-- Never claim the result is undetectable or free of AI provenance.
+- The job is to scramble and blur the statistical watermark. Always offer Layer B
+  for prose. Never skip it silently.
+- Never claim the statistical signal is gone, or that the result is undetectable.
 
 ## Sequence
 
@@ -73,9 +76,12 @@ python3 "$SCRIPTS/inspect_file.py" OUTPUT
 - Both apply to plain text and to text inside HTML, Markdown, DOCX, and ODT.
   They alter characters the user may have intended. Mention them; do not apply silently.
 
-### 4. Layer B: rewrite (prose only)
+### 4. Layer B: scramble and blur the statistical watermark (prose)
 
-- Layer A cannot touch statistical token-sampling watermarks. Only a rewrite can.
+- This is the job. A statistical watermark is the next-token bias, not a character
+  and not a file tag. Layer A cannot touch it. Only a rewrite can.
+- Scramble: change the words and, on a stronger pass, the order.
+- Blur: that change is what drops the detector's green-list score.
 - Offer it for every natural-language input.
 - Order: Layer A → paraphrase → optional stronger pass → Layer A again → report.
 - Use a rewrite model **different from the suspected origin** (Claude text → not Claude).
@@ -103,7 +109,8 @@ python3 "$SCRIPTS/rewrite_text.py" INPUT -o OUTPUT \
 State all four, separately:
 
 - **Removed, verified**: counts and actions from Layer A / metadata strip.
-- **Best-effort**: what Layer B did. No undetectability claim.
+- **Statistical watermark**: which scramble ran (lexical, back-translation, or
+  order). The signal is blurred, not certified gone.
 - **Degraded**: any exit 3, and which tool would fix it.
 - **Out of scope**: see below. These survive a clean and may still be detectable by
   vendor tools.
@@ -134,9 +141,9 @@ python3 "$SCRIPTS/ensure_tools.py" --install  # skill venv + requirements.txt
 
 Do not claim to remove these:
 
-- Pixel, audio, and video watermarks (SynthID-media class). A regeneration
-  attack needs a generative denoiser this skill does not ship. A blur is not a
-  substitute.
+- Pixel, audio, and video watermarks (SynthID-media class). Those are not
+  statistical text watermarks. A regeneration attack needs a generative denoiser
+  this skill does not ship.
 - Visible overlays (logos, stock stamps). Single-image removal does not recover
   the pixels underneath.
 - C2PA **soft binding**: an in-content watermark that re-links to a remote manifest.

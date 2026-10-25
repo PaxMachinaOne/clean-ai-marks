@@ -10,7 +10,7 @@ Primary source: [Anthropic Help Center](https://support.claude.com/en/articles/1
 | Older models | Transition; “in progress” |
 | Surfaces | API, Claude, Claude Code, Cowork, Tag |
 | Regions | **Worldwide** |
-| Detection | Third-party detection promised; docs **forthcoming** |
+| Text watermark detection | **Private preview** for eligible organizations under EU law, and for enterprises obligated to verify watermarking. A free Claude Content Checker verifies Claude-issued C2PA credentials in files. |
 
 ## Mechanism 1: embedded text watermarks
 

@@ -16,7 +16,7 @@ See: [Institute of AI PM, C2PA and SynthID guide](https://www.institutepm.com/kn
 - **Embedded text watermarks** at model level (imperceptible; survive copy-paste). Public description matches **statistical token-sampling** class, not only Unicode.
 - **C2PA Content Credentials** on supported files (e.g. PNG, JPEG, SVG).
 - Models launched on/after **2026-08-02**: marking at launch; older models in transition; **worldwide**.
-- Detection APIs for third parties: described as forthcoming.
+- Text watermark detection is in private preview for eligible organizations (EU-law audiences and obligated enterprises). The free Claude Content Checker verifies Claude-issued C2PA credentials in files. The detection API is not public.
 - Caveats: mark ⇒ may have been processed by Claude; no mark ≠ human-only; proofreading can stamp human text.
 
 **Skill mapping:** Layer A (Unicode hygiene) + Layer B (rewrite) + container/image C2PA strip.

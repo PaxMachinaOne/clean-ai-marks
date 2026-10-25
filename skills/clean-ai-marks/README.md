@@ -1,10 +1,13 @@
 # clean-ai-marks
 
-Removes machine-readable AI provenance marks from text and files:
+Scrambles and blurs **statistical text watermarks**. That is the job: the token-sampling signal (green-list, SynthID-Text, Claude's embedded text watermark, and the same class) lives in word choice, and a rewrite changes that choice. It does not certify that a detector with the vendor key will miss it.
 
-- **Layer A**: invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic and verifiable.
-- **Layer B**: statistical token-sampling watermarks, reduced by rewrite. Best-effort.
+The same scripts also strip marks that ride along with the file:
+
+- **Layer A**: invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic and verifiable. This is not the statistical watermark.
 - **Container metadata**: C2PA / EXIF / XMP / document properties on PNG, JPEG, SVG, PDF, DOCX, ODT, HTML, Markdown.
+
+Pixel, audio, video, and visible watermarks are a different thing and are not this tool.
 
 Covers Claude, Gemini / SynthID-class, OpenAI, and open-LLM marks. `SKILL.md` is the agent-facing workflow; this file is the human-facing one.
 
@@ -39,9 +42,9 @@ python3 scripts/inspect_file.py notes.cleaned.md      # verify
 
 Useful flags: `--json` (machine-readable report), `--in-place` (writes a `.bak` first), `--stats`, `--nfkc`, `--aggressive-homoglyphs`, `--keep-non-ai-metadata` (images: drop only C2PA/AI-looking segments), `--as` (force the dispatch type).
 
-## Layer B rewrite
+## Layer B: scramble and blur the statistical watermark
 
-Statistical marks live in word choice, not metadata, so only a rewrite touches them. Default backend prints the prompt and calls no model:
+This is the point of the tool. A statistical watermark is a bias on the next token. Scrambling changes which tokens appear and in what order. Blurring is that same change seen from the detector: the green-list score falls because the tokens moved. Default backend prints the prompt and calls no model:
 
 ```bash
 python3 scripts/rewrite_text.py draft.md --backend print-prompt
@@ -52,7 +55,7 @@ export WATERMARKS_REWRITE_BASE_URL=http://127.0.0.1:11434
 python3 scripts/rewrite_text.py draft.md -o draft.rewritten.md --strength paraphrase
 ```
 
-Strengths: `paraphrase` (default: high lexical diversity, stable sentence order), `backtranslate` (pivot language and back), `structural` (outline, then new wording and sentence order; most meaning drift). Backends: `print-prompt`, `ollama`, `openai-compatible`. A rewrite reduces a sampling watermark. It does not certify removal. See `references/watermark-attacks.md`.
+Strengths, all of them aimed at the statistical signal: `paraphrase` (default: high lexical diversity, stable sentence order), `backtranslate` (pivot language and back), `structural` (outline, then new wording and sentence order; most drift). Backends: `print-prompt`, `ollama`, `openai-compatible`. See `references/watermark-attacks.md`.
 
 Prefer a rewrite model **different from the suspected origin**: rewriting Claude text with Claude can re-stamp it. Layer A runs again on the result unless `--no-layer-a-after`.
 
@@ -94,7 +97,7 @@ A successful strip does not mean no provenance remains. What survives:
 | C2PA **soft binding** (in-content link to a remote manifest) | **Yes, by design** | vendor detector only |
 | Pixel / audio / video watermarks (SynthID-media) | **Yes** | SynthID Detector |
 | Visible overlays (logos, stock stamps) | **Yes** | Look at the image |
-| Statistical text watermark | Reduced, not provably gone | vendor detector / secret key |
+| Statistical text watermark | Scrambled and blurred by Layer B, not provably gone | vendor detector / secret key |
 | Data-driven model backdoors | **Yes** | out of reach |
 
 Report the three buckets separately: what was verifiably removed (counts, actions), what was best-effort (Layer B), and what was never in scope. Layer B cannot be gold-verified without vendor detectors or keys, so no "undetectable" claim is supportable.
