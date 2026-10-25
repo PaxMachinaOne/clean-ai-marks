@@ -5,4 +5,4 @@
 #     python3 skills/clean-ai-marks/scripts/ensure_tools.py --install
 -r skills/clean-ai-marks/requirements.txt
 
-pytest>=8
+pytest>=9.1.1
