@@ -196,6 +196,66 @@ def _is_strip_cp(cp: int) -> bool:
     return cp in STRIP_CODEPOINTS or cp in _VS_SUPPLEMENT or 0xE0001 <= cp <= 0xE007F
 
 
+def _emoji_base(cp: int) -> bool:
+    return 0x2600 <= cp <= 0x27BF or 0x1F000 <= cp <= 0x1FAFF
+
+
+def _joining_letter(cp: int) -> bool:
+    if not (
+        0x0600 <= cp <= 0x06FF
+        or 0x0750 <= cp <= 0x077F
+        or 0x08A0 <= cp <= 0x08FF
+        or 0xFB50 <= cp <= 0xFDFF
+        or 0xFE70 <= cp <= 0xFEFF
+        or 0x0900 <= cp <= 0x0DFF
+        or 0x1000 <= cp <= 0x109F
+    ):
+        return False
+    return unicodedata.category(chr(cp)).startswith("L")
+
+
+def _emoji_component(text: str, i: int) -> bool:
+    cp = ord(text[i])
+    if _emoji_base(cp):
+        return True
+    return cp == 0xFE0F and i > 0 and _emoji_base(ord(text[i - 1]))
+
+
+def _kept_format_indexes(text: str) -> set[int]:
+    """ZWJ, ZWNJ, VS16 and tag chars that belong to emoji or a joining script.
+
+    Stray copies, repeated joiners, and VS1–VS15 stay in the strip set.
+    """
+    keep: set[int] = set()
+    n = len(text)
+    i = 0
+    while i < n:
+        if ord(text[i]) != 0x1F3F4:
+            i += 1
+            continue
+        j = i + 1
+        while j < n and 0xE0020 <= ord(text[j]) <= 0xE007E:
+            j += 1
+        if j > i + 1 and j < n and ord(text[j]) == 0xE007F:
+            keep.update(range(i + 1, j + 1))
+            i = j + 1
+            continue
+        i += 1
+    for i, ch in enumerate(text):
+        cp = ord(ch)
+        if cp in (0x200C, 0x200D) and 0 < i < n - 1:
+            left, right = ord(text[i - 1]), ord(text[i + 1])
+            if _joining_letter(left) and _joining_letter(right):
+                keep.add(i)
+            elif cp == 0x200D and _emoji_component(text, i - 1) and (
+                _emoji_base(right) or right == 0xFE0F
+            ):
+                keep.add(i)
+        elif cp == 0xFE0F and i > 0 and _emoji_base(ord(text[i - 1])):
+            keep.add(i)
+    return keep
+
+
 def _strip_kind(cp: int) -> str:
     """Finer-grained inspect kind for strip-class codepoints."""
     if 0xE0001 <= cp <= 0xE007F:
@@ -253,7 +313,10 @@ class TextInspectReport:
 
 def inspect_text(text: str, *, aggressive: bool = False) -> TextInspectReport:
     buckets: dict[tuple[int, str], list[int]] = {}
+    kept = _kept_format_indexes(text)
     for i, ch in enumerate(text):
+        if i in kept:
+            continue
         cp = ord(ch)
         kind: str | None = None
         if _is_strip_cp(cp):
@@ -309,8 +372,12 @@ def clean_text(
     removed: Counter[str] = Counter()
     replaced: Counter[str] = Counter()
     out_chars: list[str] = []
+    kept = _kept_format_indexes(text)
 
-    for ch in text:
+    for i, ch in enumerate(text):
+        if i in kept:
+            out_chars.append(ch)
+            continue
         cp = ord(ch)
         if _is_strip_cp(cp):
             removed[_char_label(ch)] += 1

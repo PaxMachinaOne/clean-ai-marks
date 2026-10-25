@@ -4,7 +4,7 @@ Scrambles and blurs **statistical text watermarks**. That is the job: the token-
 
 The same scripts also strip marks that ride along with the file:
 
-- **Layer A**: invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic and verifiable. This is not the statistical watermark.
+- **Layer A**: invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic and verifiable. This is not the statistical watermark. Emoji ZWJ sequences, emoji VS16, flag tag sequences, and ZWNJ or ZWJ between Arabic, Indic, or Myanmar letters stay. Stray copies are removed.
 - **Container metadata**: C2PA / EXIF / XMP / document properties on PNG, JPEG, SVG, PDF, DOCX, ODT, HTML, Markdown.
 
 Pixel, audio, video, and visible watermarks are a different thing and are not this tool.

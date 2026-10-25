@@ -13,7 +13,7 @@ Invisible or near-invisible characters, exotic spaces, bidi controls, tag charac
 | `space` | NBSP, em space, ideographic space |
 | `confusable` | Cyrillic/fullwidth Latin (aggressive) |
 
-**Removal:** `clean_text.py` / Layer A, deterministic and verifiable.
+**Removal:** `clean_text.py` / Layer A, deterministic and verifiable. Emoji ZWJ sequences, emoji VS16, flag tag sequences, and ZWNJ/ZWJ between Arabic, Indic, or Myanmar letters stay. Stray copies are stripped.
 
 Maps to Nature paper “edit-based watermarking.”
 

@@ -52,6 +52,37 @@ def test_inspect_bidi():
     assert "\u202e" not in cleaned
 
 
+def test_keeps_emoji_sequences_flag_tags_and_script_joiners():
+    samples = [
+        "\U0001f468\u200d\U0001f469\u200d\U0001f467",
+        "\u2764\ufe0f",
+        "\U0001f3f4\U000e0067\U000e0062\U000e0065\U000e006e\U000e0067\U000e007f",
+        "\u0645\u06cc\u200c\u062e\u0648\u0627\u0647\u0645",
+        "\u0915\u200d\u0915",
+    ]
+    for raw in samples:
+        cleaned, stats = clean_text(raw)
+        assert cleaned == raw
+        assert stats["removed_count"] == 0
+        assert inspect_text(raw).suspicious_total == 0
+
+
+def test_strips_stray_joiners_selectors_and_tag_chars():
+    stray_zwj = "a\u200db"
+    stray_zwnj = "a\u200cb"
+    text_style_heart = "\u2764\ufe0e"
+    lone_tag = "hi" + chr(0xE0041) + "there"
+    for raw, gone in (
+        (stray_zwj, "\u200d"),
+        (stray_zwnj, "\u200c"),
+        (text_style_heart, "\ufe0e"),
+        (lone_tag, chr(0xE0041)),
+    ):
+        cleaned, _stats = clean_text(raw)
+        assert gone not in cleaned
+        assert inspect_text(raw).suspicious_total >= 1
+
+
 def test_clean_preserves_normal_text():
     raw = "Normal ASCII and café — fine."
     cleaned, stats = clean_text(raw)

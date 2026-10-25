@@ -4,7 +4,7 @@ An agent skill whose job is to scramble and blur **statistical text watermarks**
 
 The same tools also strip marks that ride along with the text:
 
-- **Layer A**: invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic, verifiable. This is not the statistical watermark.
+- **Layer A**: invisible Unicode (zero-width, bidi, tag chars, variation selectors, exotic spaces). Deterministic, verifiable. This is not the statistical watermark. Emoji sequences and script-required joiners stay.
 - **Metadata**: C2PA / EXIF / XMP / document properties on PNG, JPEG, SVG, PDF, DOCX, ODT, HTML, Markdown.
 
 Pixel, audio, video, and visible watermarks are a different thing and are not this tool.
