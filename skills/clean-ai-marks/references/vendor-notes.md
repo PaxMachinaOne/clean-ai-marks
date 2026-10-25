@@ -21,7 +21,7 @@ See: [Institute of AI PM, C2PA and SynthID guide](https://www.institutepm.com/kn
 
 **Skill mapping:** Layer A (Unicode hygiene) + Layer B (rewrite) + container/image C2PA strip.
 
-Source: [How Claude marks AI-generated content](https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content).
+Source: [How Claude marks AI-generated content](https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content). Mechanism: [How Claude's text watermarking works](https://www.anthropic.com/news/claude-text-watermark). Checked 2026-10-25.
 
 ## Google Gemini / SynthID-Text
 
