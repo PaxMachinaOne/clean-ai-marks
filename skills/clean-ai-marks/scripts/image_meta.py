@@ -59,6 +59,7 @@ class ImageInspectReport:
     has_ai_metadata: bool
     findings: list[str] = field(default_factory=list)
     tools: dict[str, Any] = field(default_factory=dict)
+    error: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -68,6 +69,7 @@ class ImageInspectReport:
             "has_ai_metadata": self.has_ai_metadata,
             "findings": self.findings,
             "tools": self.tools,
+            "error": self.error,
         }
 
 
@@ -267,12 +269,14 @@ def run_optional_tools(path: Path) -> dict[str, Any]:
 def inspect_image(path: Path) -> ImageInspectReport:
     data = path.read_bytes()
     fmt = detect_image_format(data)
+    error = ""
     if fmt == "png":
         has_c2pa, has_ai, findings = inspect_png(data)
     elif fmt == "jpeg":
         has_c2pa, has_ai, findings = inspect_jpeg(data)
     else:
         has_c2pa, has_ai, findings = False, False, ["unsupported format (MVP: PNG/JPEG)"]
+        error = findings[0]
 
     tools = run_optional_tools(path)
     # Elevate flags from tools
@@ -288,6 +292,7 @@ def inspect_image(path: Path) -> ImageInspectReport:
         has_ai_metadata=has_ai,
         findings=findings,
         tools=tools,
+        error=error,
     )
 
 

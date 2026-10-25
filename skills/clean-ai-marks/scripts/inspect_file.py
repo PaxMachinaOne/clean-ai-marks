@@ -62,6 +62,8 @@ def main() -> int:
         print(f"AI metadata: {report.has_ai_metadata}")
         for f in report.findings:
             print(f"  - {f}")
+    if report.error:
+        return EXIT_BAD_INPUT
     return EXIT_ERROR if (report.has_c2pa or report.has_ai_metadata) else EXIT_OK
 
 
