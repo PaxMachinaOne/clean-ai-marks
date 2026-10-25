@@ -49,6 +49,8 @@ One pass often leaves a unigram watermark detectable. Querying the watermarked m
 
 Attack detail, and the pixel and visible marks this tool does not touch, is in [`references/watermark-attacks.md`](skills/clean-ai-marks/references/watermark-attacks.md).
 
+The harness used for this research generates a document with a key it holds, runs Layer A, then an unkeyed rewrite, and prints the green-list z-score. The write-up and the default numbers are in [`demo/README.md`](demo/README.md). `make qa` runs it again.
+
 ## Sources
 
 - [Kirchenbauer et al., 2023. *A Watermark for Large Language Models.*](https://arxiv.org/abs/2301.10226) Green list, logit bias, z-score.
@@ -118,7 +120,8 @@ skills/clean-ai-marks/
   scripts/          CLI entry points and supporting modules
   requirements.txt  optional extras
 tests/              pytest suite and fixtures
-Makefile            tools / test / smoke / install-skill / clean
+demo/               research harness for the green-list z-score
+Makefile            tools / test / smoke / qa / install-skill / clean
 ```
 
 ## Make targets
@@ -128,6 +131,7 @@ Makefile            tools / test / smoke / install-skill / clean
 | `tools` | Creates `skills/clean-ai-marks/.venv` and installs the optional extras |
 | `test` | Runs pytest |
 | `smoke` | Drives the CLI end to end over `tests/fixtures` |
+| `qa` | Runs the green-list research harness. Write-up: [`demo/README.md`](demo/README.md) |
 | `install-skill` | Symlinks the skill into `~/.grok/skills/` (`SKILLS_DIR` overrides that directory) |
 | `clean` | Drops `__pycache__`, `.pytest_cache`, and both venvs |
 

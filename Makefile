@@ -1,4 +1,4 @@
-.PHONY: test smoke tools install-skill clean
+.PHONY: test smoke tools install-skill qa clean
 
 SCRIPTS := skills/clean-ai-marks/scripts
 PYTHON ?= $(shell if [ -x .venv/bin/python ]; then echo .venv/bin/python; else echo python3; fi)
@@ -18,6 +18,9 @@ smoke:
 	python3 $(SCRIPTS)/clean_file.py tests/fixtures/sample_ai.html -o /tmp/sample_ai.cleaned.html
 	python3 $(SCRIPTS)/clean_file.py tests/fixtures/sample_meta.svg -o /tmp/sample_meta.cleaned.svg
 	@echo "smoke ok"
+
+qa:
+	$(PYTHON) demo/watermark_qa.py
 
 SKILLS_DIR ?= $(HOME)/.grok/skills
 
