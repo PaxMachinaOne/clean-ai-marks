@@ -8,6 +8,7 @@ A statistical watermark (Kirchenbauer green-list, SynthID-Text tournament sampli
 
 The published query-free baselines are:
 
+- **Simpler synonyms.** Replace content words with shorter, more common words of the same meaning. Leave function words, names, and numbers. Keep sentence order. This is `--strength simplify`. It aims at the high-entropy choices, where the bias was applied. A context-hash mark loses alignment after a change. A context-free mark often survives, because the simpler word can still be green.
 - **Lexical diversity.** Replace wording and keep sentence order. This is `--strength paraphrase`. It is the lexical knob of DIPPER (Krishna et al., 2023).
 - **Back-translation.** Translate out and back. This is `--strength backtranslate`, the attack used in the Kirchenbauer robustness evaluation.
 - **Order diversity plus regeneration.** Split, merge, and reorder, or rebuild from an outline. This is `--strength structural`. DIPPER's order knob and an outline rebuild both change the token sequence more than a wording-only paraphrase, and they drift further from the source.

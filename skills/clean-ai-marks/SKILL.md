@@ -97,8 +97,9 @@ python3 "$SCRIPTS/rewrite_text.py" INPUT -o OUTPUT \
 ```
 
 - `--strength`: `paraphrase` (default, high lexical diversity, stable sentence
-  order), `backtranslate` (pivot language and back), `structural` (outline, then
-  new wording and sentence order; most meaning drift).
+  order), `simplify` (shorter common words for content words only, same order),
+  `backtranslate` (pivot language and back), `structural` (outline, then new
+  wording and sentence order; most meaning drift).
 - `print-prompt` calls no model; use it to obtain the prompt, then rewrite yourself.
 - Layer A re-runs on model output automatically; `--no-layer-a-after` disables it.
 - For code: formatter (`prettier`, `black`, `gofmt`) plus Layer A. Rewrite code only

@@ -55,7 +55,7 @@ export WATERMARKS_REWRITE_BASE_URL=http://127.0.0.1:11434
 python3 scripts/rewrite_text.py draft.md -o draft.rewritten.md --strength paraphrase
 ```
 
-Strengths, all of them aimed at the statistical signal: `paraphrase` (default: high lexical diversity, stable sentence order), `backtranslate` (pivot language and back), `structural` (outline, then new wording and sentence order; most drift). Backends: `print-prompt`, `ollama`, `openai-compatible`. See `references/watermark-attacks.md`.
+Strengths, all of them aimed at the statistical signal: `paraphrase` (default: high lexical diversity, stable sentence order), `simplify` (shorter common words for content words only, same order), `backtranslate` (pivot language and back), `structural` (outline, then new wording and sentence order; most drift). Backends: `print-prompt`, `ollama`, `openai-compatible`. See `references/watermark-attacks.md`.
 
 Prefer a rewrite model **different from the suspected origin**: rewriting Claude text with Claude can re-stamp it. Layer A runs again on the result unless `--no-layer-a-after`.
 

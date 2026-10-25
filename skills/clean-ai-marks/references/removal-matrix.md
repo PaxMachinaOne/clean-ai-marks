@@ -3,7 +3,7 @@
 | Target | Method | Script / action | Side effects | Verifiable today? |
 | --- | --- | --- | --- | --- |
 | Invisible Unicode / exotic spaces / bidi / tags | Strip / normalize | `inspect_text.py`, `clean_text.py`, `clean_file.py` | Minimal | Yes (codepoint report) |
-| Statistical text watermark (SynthID-class / Kirchenbauer) | Lexical paraphrase, back-translate, or outline plus order diversity | Agent Layer B + optional `rewrite_text.py` | Meaning/style drift | No without vendor key/detector |
+| Statistical text watermark (SynthID-class / Kirchenbauer) | Simpler synonyms, lexical paraphrase, back-translate, or outline plus order diversity | Agent Layer B + optional `rewrite_text.py` | Meaning/style drift | No without vendor key/detector |
 | C2PA on PNG/JPEG | Drop APP11 / text chunks / exiftool | `clean_image.py` | Loses provenance metadata | Yes |
 | SVG metadata / XMP | Drop `<metadata>`, xmpmeta | `clean_file.py` | Loses SVG metadata | Yes (re-inspect) |
 | PDF XMP / info / C2PA associated file | pikepdf strip + rewrite (else exiftool + qpdf) | `clean_file.py` | Loses PDF metadata and C2PA embedded manifests; degraded (exit 3) without a rewriter | Partial |
@@ -35,5 +35,6 @@
 | Strength | When |
 | --- | --- |
 | `paraphrase` | Default |
+| `simplify` | Content words only, shorter common synonyms, same order |
 | `backtranslate` | Stronger token reshuffle |
 | `structural` | Strongest; most drift |

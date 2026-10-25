@@ -45,6 +45,15 @@ def test_every_strength_scrambles_the_statistical_signal():
         assert "Scramble and blur that statistical signal." in prompt
 
 
+def test_simplify_swaps_content_words_and_keeps_anchors():
+    prompt = build_prompt("simplify", "Purchase 42 widgets.", lang="French", original_lang="English")
+    assert "shorter, more common words" in prompt
+    assert "Keep the sentence order." in prompt
+    assert "function words" in prompt
+    assert "names, numbers" in prompt
+    assert "Purchase 42 widgets." in prompt
+
+
 def test_prompts_match_the_published_paraphrase_attacks():
     lexical = build_prompt("paraphrase", "Hello.", lang="French", original_lang="English")
     structural = build_prompt("structural", "Hello.", lang="French", original_lang="English")

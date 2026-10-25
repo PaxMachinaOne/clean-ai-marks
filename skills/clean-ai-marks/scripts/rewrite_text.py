@@ -52,6 +52,12 @@ PROMPTS = {
         "and keep the sentence order. Preserve all facts, numbers, names, and technical "
         "identifiers. Do not add or remove claims. Output only the rewritten text.\n\n---\n{TEXT}"
     ),
+    "simplify": (
+        _JOB + "Replace content words with shorter, more common words of the same meaning. "
+        "Keep the sentence order. Leave function words, names, numbers, and technical "
+        "identifiers unchanged. Do not add or remove claims. Output only the rewritten "
+        "text.\n\n---\n{TEXT}"
+    ),
     "backtranslate": (
         _JOB + "Do it by translating the text to {LANG}, then translating that result "
         "back to {ORIGINAL_LANG}. Preserve all facts, numbers, and names. Output only "
@@ -217,7 +223,7 @@ def main() -> int:
     p.add_argument("--api-key", default=_env("WATERMARKS_REWRITE_API_KEY"))
     p.add_argument(
         "--strength",
-        choices=("paraphrase", "backtranslate", "structural"),
+        choices=tuple(PROMPTS),
         default="paraphrase",
     )
     p.add_argument("--lang", default="French", help="Pivot language for backtranslate")

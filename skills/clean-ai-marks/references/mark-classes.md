@@ -21,7 +21,7 @@ Maps to Nature paper “edit-based watermarking.”
 
 Bias next-token sampling toward a pseudo-random green list / score (Kirchenbauer, SynthID-Text / Tournament sampling, etc.). Signal lives in **word choice**, not metadata.
 
-**This is the job of the skill.** Layer B scrambles and blurs the signal (lexical paraphrase, back-translate, or outline plus a new sentence order). No gold certificate without the vendor detector or key.
+**This is the job of the skill.** Layer B scrambles and blurs the signal (simpler synonyms, lexical paraphrase, back-translate, or outline plus a new sentence order). No gold certificate without the vendor detector or key.
 
 Maps to Nature paper primary method (SynthID-Text).
 
