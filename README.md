@@ -14,6 +14,89 @@ Covers Claude, Gemini / SynthID-class, OpenAI, and open-LLM marks.
 Tool usage, flags, exit codes, and the residual-risk table live in
 **[`skills/clean-ai-marks/README.md`](skills/clean-ai-marks/README.md)**. This file covers the repository.
 
+The agent contract is [`skills/clean-ai-marks/SKILL.md`](skills/clean-ai-marks/SKILL.md). Cloning this repo does not load it. Agents only read a skill from a discovery directory, and `skills/` at the repo root is not one.
+
+## How a statistical text watermark works
+
+Nothing is hidden between the letters. At each step the model was choosing the next token, and the watermark biased that choice.
+
+A green-list scheme ([Kirchenbauer et al., 2023](https://arxiv.org/abs/2301.10226)) hashes the recent tokens with a secret key and splits the vocabulary into a green list and a red list. It adds a small logit boost to the green tokens. The sentence still reads normally. The mark is the excess of green tokens. A detector that has the key counts them and turns the excess into a z-score. Long text is easier to call. Short text often is not.
+
+[SynthID-Text](https://www.nature.com/articles/s41586-024-08025-4) (Dathathri et al., Nature 2024) does the same job with tournament sampling: a keyed score picks among candidate tokens. Claude's embedded text watermark is this class. Anthropic describes it as woven into the text, surviving copy-paste, and weakening under paraphrase, translation, or a heavy edit ([Help Center](https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content)). The algorithm and the key are not public.
+
+A context-hash list is redrawn from the previous tokens. A context-free list, the unigram watermark ([Zhao et al., 2023](https://arxiv.org/abs/2306.17439)), paints each token green or red on its own. That one survives local edits better, because changing a word does not reshuffle the lists after it.
+
+The bias is applied where the model had a real choice. Function words are predictable, so forcing them sounds wrong. The signal sits in content words: `purchase` versus `buy`, `approximately` versus `about`.
+
+## Why a rewrite blurs it
+
+The detector's evidence is "more green tokens than chance." Replace those tokens and the evidence shrinks. That is the blur. It is not a certificate.
+
+- A context-hash mark also loses alignment. Change one word and the green lists after it are rebuilt, so later words that you did not touch stop counting.
+- A context-free mark does not. The simpler word is green or red on its own. You only gain on the words you change, and only when the replacement is off the list.
+- The rewrite has to come from somewhere else. Running the text back through the same watermarked model writes a new statistical mark in place of the old one.
+
+The strengths in `rewrite_text.py` are that attack, split by how much of the token sequence moves:
+
+| Strength | What it changes | Where it comes from |
+| --- | --- | --- |
+| `simplify` | Content words become shorter, more common synonyms. Order stays. | Synonym substitution. A context-hash mark moves. A context-free mark often stays. [Cheng et al., 2025](https://arxiv.org/abs/2505.05190) |
+| `paraphrase` | New wording, same sentence order | Lexical diversity, the DIPPER knob ([Krishna et al., 2023](https://arxiv.org/abs/2303.13408)) |
+| `backtranslate` | Out to another language and back | The Kirchenbauer robustness evaluation |
+| `structural` | Outline, then new wording and a new sentence order | DIPPER's order knob, plus a rebuild |
+
+One pass often leaves a unigram watermark detectable. Querying the watermarked model to learn the green list and then swapping ([Wu and Chandrasekaran, 2024](https://arxiv.org/abs/2403.14719); [Jovanović et al., 2024](https://arxiv.org/abs/2402.19361)) is not what this skill does.
+
+Attack detail, and the pixel and visible marks this tool does not touch, is in [`references/watermark-attacks.md`](skills/clean-ai-marks/references/watermark-attacks.md).
+
+## Sources
+
+- [Kirchenbauer et al., 2023. *A Watermark for Large Language Models.*](https://arxiv.org/abs/2301.10226) Green list, logit bias, z-score.
+- [Zhao et al., 2023. *Provable Robust Watermarking for AI-Generated Text.*](https://arxiv.org/abs/2306.17439) Context-free unigram list. Harder to break with a light edit.
+- [Dathathri et al., 2024. *Scalable watermarking for identifying large language model outputs.* Nature.](https://www.nature.com/articles/s41586-024-08025-4) SynthID-Text.
+- [Krishna et al., 2023. *Paraphrasing evades detectors of AI-generated text.*](https://arxiv.org/abs/2303.13408) DIPPER. Lexical diversity and order diversity.
+- [Cheng et al., 2025. *Revealing Weaknesses in Text Watermarking Through Self-Information Rewrite Attacks.*](https://arxiv.org/abs/2505.05190) Synonym substitution versus rewriting only the surprising tokens.
+- [Wu and Chandrasekaran, 2024. *Bypassing LLM Watermarks with Color-Aware Substitutions.*](https://arxiv.org/abs/2403.14719) Needs the watermarked model. Not implemented here.
+- [Jovanović et al., 2024. *Watermark Stealing in Large Language Models.*](https://arxiv.org/abs/2402.19361) Learns the green list by querying. Not implemented here.
+- [Anthropic. *How Claude marks AI-generated content.*](https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content) Embedded text watermark plus C2PA. Detection of the text mark is a private preview.
+- [C2PA specification.](https://spec.c2pa.org/) Hard-bound manifests in the file. A different channel from the statistical text mark.
+
+## Use it from an agent
+
+`make install-skill` symlinks the skill into `~/.grok/skills/clean-ai-marks`. Grok then exposes `/clean-ai-marks` and can load the skill when the request matches the description. The same directory works for any agent that reads a `SKILL.md` plus the `scripts/` beside it.
+
+| Agent | Put the skill here | What you get |
+| --- | --- | --- |
+| Grok, all projects | `~/.grok/skills/clean-ai-marks` (`make install-skill`) | `/clean-ai-marks`, and automatic use when the description matches |
+| Grok, this repo only | `<repo>/.grok/skills/clean-ai-marks` | Same, for anyone who clones the repo |
+| Claude Code | `~/.claude/skills/clean-ai-marks` or `<repo>/.claude/skills/clean-ai-marks` | Claude reads the same `SKILL.md`. Grok scans these directories too |
+| Cursor | `~/.cursor/skills/clean-ai-marks` or `<repo>/.cursor/skills/clean-ai-marks` | Cursor reads the same `SKILL.md`. Grok scans these directories too |
+| Anything that can run Python | Point the agent at `skills/clean-ai-marks/SKILL.md` | No skill directory. The agent follows the workflow and runs the scripts |
+
+```bash
+# all Grok projects
+make install-skill
+
+# this repo only, so a clone is enough
+mkdir -p .grok/skills
+ln -sfn ../../skills/clean-ai-marks .grok/skills/clean-ai-marks
+
+# Claude Code, all projects
+mkdir -p ~/.claude/skills
+ln -sfn "$(pwd)/skills/clean-ai-marks" ~/.claude/skills/clean-ai-marks
+```
+
+The slash command is the directory name, `clean-ai-marks`. The names in the description (`/remove-ai-marks`, `/remove-claude-marks`) are trigger phrases, not extra commands.
+
+What the agent actually does:
+
+1. Inspect with `inspect_file.py`. Exit 1 means marks were found, not that the command failed.
+2. Write a `*.cleaned.*` copy with `clean_file.py`. That removes invisible Unicode and container metadata. It does not touch the statistical watermark.
+3. For prose, offer a Layer B rewrite. `rewrite_text.py --backend print-prompt` only prints the prompt. The statistical scramble happens when the agent, or `--backend ollama`, rewrites the text. `simplify` is the lighter pass. Use a model other than the one that likely wrote the text.
+4. Inspect again. Say what was verified, which scramble ran, and that the statistical signal is not certified gone.
+
+`make test` and `make smoke` check the scripts. They do not check that an agent loaded the skill.
+
 ## Quick start
 
 ```bash

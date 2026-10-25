@@ -9,7 +9,7 @@ The same scripts also strip marks that ride along with the file:
 
 Pixel, audio, video, and visible watermarks are a different thing and are not this tool.
 
-Covers Claude, Gemini / SynthID-class, OpenAI, and open-LLM marks. `SKILL.md` is the agent-facing workflow; this file is the human-facing one.
+Covers Claude, Gemini / SynthID-class, OpenAI, and open-LLM marks. `SKILL.md` is the agent-facing workflow; this file is the human-facing one. An agent only loads `SKILL.md` from a skill directory (`~/.grok/skills`, `~/.claude/skills`, `~/.cursor/skills`, or the matching project directory). The repo README has the symlink commands, how a statistical text watermark is embedded, why a rewrite blurs it, and the paper list. `make install-skill` covers Grok.
 
 ## Install
 
