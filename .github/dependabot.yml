@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: pip
     directories:
       - /
-      - /skills/clean-ai-marks
+      - /skills/ai-watermark-scrambler
     schedule:
       interval: weekly
     groups:

@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "skills" / "clean-ai-marks" / "scripts"
+SCRIPTS = ROOT / "skills" / "ai-watermark-scrambler" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import container_meta  # noqa: E402

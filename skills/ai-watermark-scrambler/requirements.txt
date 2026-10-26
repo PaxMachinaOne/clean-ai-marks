@@ -1,4 +1,4 @@
-# Optional extras for the clean-ai-marks skill.
+# Optional extras for the ai-watermark-scrambler skill.
 # The scripts run on stdlib alone; these only remove degraded modes.
 # Install into the skill's own venv:  python3 scripts/ensure_tools.py --install
 

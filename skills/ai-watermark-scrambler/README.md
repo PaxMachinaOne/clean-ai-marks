@@ -1,4 +1,4 @@
-# clean-ai-marks
+# ai-watermark-scrambler
 
 Scrambles and blurs **statistical text watermarks**. That is the job: the token-sampling signal (green-list, SynthID-Text, Claude's embedded text watermark, and the same class) lives in word choice, and a rewrite changes that choice. It does not certify that a detector with the vendor key will miss it.
 

@@ -19,7 +19,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "skills" / "clean-ai-marks" / "scripts"))
+sys.path.insert(0, str(ROOT / "skills" / "ai-watermark-scrambler" / "scripts"))
 
 from text_unicode import clean_text  # noqa: E402
 

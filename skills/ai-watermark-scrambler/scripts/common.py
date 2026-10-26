@@ -1,4 +1,4 @@
-"""Shared helpers for clean-ai-marks scripts."""
+"""Shared helpers for ai-watermark-scrambler scripts."""
 
 from __future__ import annotations
 

@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "skills" / "clean-ai-marks" / "scripts"
+SCRIPTS = ROOT / "skills" / "ai-watermark-scrambler" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from container_meta import (  # noqa: E402
