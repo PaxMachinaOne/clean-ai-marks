@@ -10,14 +10,14 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "skills" / "clean-ai-marks" / "scripts"
+SCRIPTS = ROOT / "skills" / "ai-watermark-scrambler" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import common  # noqa: E402
 import container_meta  # noqa: E402
 import image_meta  # noqa: E402
 
-REQUIREMENTS = ROOT / "skills" / "clean-ai-marks" / "requirements.txt"
+REQUIREMENTS = ROOT / "skills" / "ai-watermark-scrambler" / "requirements.txt"
 
 
 def test_requirements_file_ships_with_the_skill():

@@ -1,4 +1,4 @@
-# clean-ai-marks
+# ai-watermark-scrambler
 
 An agent skill whose job is to scramble and blur **statistical text watermarks**: the token-sampling signal (green-list, SynthID-Text, Claude's embedded text watermark, and the same class). The signal lives in word choice. A rewrite changes that choice. It does not certify that a detector with the vendor key will miss it.
 
@@ -12,9 +12,9 @@ Pixel, audio, video, and visible watermarks are a different thing and are not th
 Covers Claude, Gemini / SynthID-class, OpenAI, and open-LLM marks.
 
 Tool usage, flags, exit codes, and the residual-risk table live in
-**[`skills/clean-ai-marks/README.md`](skills/clean-ai-marks/README.md)**. This file covers the repository.
+**[`skills/ai-watermark-scrambler/README.md`](skills/ai-watermark-scrambler/README.md)**. This file covers the repository.
 
-The agent contract is [`skills/clean-ai-marks/SKILL.md`](skills/clean-ai-marks/SKILL.md). Cloning this repo does not load it. Agents only read a skill from a discovery directory, and `skills/` at the repo root is not one.
+The agent contract is [`skills/ai-watermark-scrambler/SKILL.md`](skills/ai-watermark-scrambler/SKILL.md). Cloning this repo does not load it. Agents only read a skill from a discovery directory, and `skills/` at the repo root is not one.
 
 ## How a statistical text watermark works
 
@@ -47,7 +47,7 @@ The strengths in `rewrite_text.py` are that attack, split by how much of the tok
 
 One pass often leaves a unigram watermark detectable. Querying the watermarked model to learn the green list and then swapping ([Wu and Chandrasekaran, 2024](https://arxiv.org/abs/2403.14719); [Jovanović et al., 2024](https://arxiv.org/abs/2402.19361)) is not what this skill does.
 
-Attack detail, and the pixel and visible marks this tool does not touch, is in [`references/watermark-attacks.md`](skills/clean-ai-marks/references/watermark-attacks.md).
+Attack detail, and the pixel and visible marks this tool does not touch, is in [`references/watermark-attacks.md`](skills/ai-watermark-scrambler/references/watermark-attacks.md).
 
 The harness used for this research generates a document with a key it holds, runs Layer A, then an unkeyed rewrite, and prints the green-list z-score. The write-up and the default numbers are in [`demo/README.md`](demo/README.md). `make qa` runs it again.
 
@@ -65,15 +65,15 @@ The harness used for this research generates a document with a key it holds, run
 
 ## Use it from an agent
 
-`make install-skill` symlinks the skill into `~/.grok/skills/clean-ai-marks`. Grok then exposes `/clean-ai-marks` and can load the skill when the request matches the description. The same directory works for any agent that reads a `SKILL.md` plus the `scripts/` beside it.
+`make install-skill` symlinks the skill into `~/.grok/skills/ai-watermark-scrambler`. Grok then exposes `/ai-watermark-scrambler` and can load the skill when the request matches the description. The same directory works for any agent that reads a `SKILL.md` plus the `scripts/` beside it.
 
 | Agent | Put the skill here | What you get |
 | --- | --- | --- |
-| Grok, all projects | `~/.grok/skills/clean-ai-marks` (`make install-skill`) | `/clean-ai-marks`, and automatic use when the description matches |
-| Grok, this repo only | `<repo>/.grok/skills/clean-ai-marks` | Same, for anyone who clones the repo |
-| Claude Code | `~/.claude/skills/clean-ai-marks` or `<repo>/.claude/skills/clean-ai-marks` | Claude reads the same `SKILL.md`. Grok scans these directories too |
-| Cursor | `~/.cursor/skills/clean-ai-marks` or `<repo>/.cursor/skills/clean-ai-marks` | Cursor reads the same `SKILL.md`. Grok scans these directories too |
-| Anything that can run Python | Point the agent at `skills/clean-ai-marks/SKILL.md` | No skill directory. The agent follows the workflow and runs the scripts |
+| Grok, all projects | `~/.grok/skills/ai-watermark-scrambler` (`make install-skill`) | `/ai-watermark-scrambler`, and automatic use when the description matches |
+| Grok, this repo only | `<repo>/.grok/skills/ai-watermark-scrambler` | Same, for anyone who clones the repo |
+| Claude Code | `~/.claude/skills/ai-watermark-scrambler` or `<repo>/.claude/skills/ai-watermark-scrambler` | Claude reads the same `SKILL.md`. Grok scans these directories too |
+| Cursor | `~/.cursor/skills/ai-watermark-scrambler` or `<repo>/.cursor/skills/ai-watermark-scrambler` | Cursor reads the same `SKILL.md`. Grok scans these directories too |
+| Anything that can run Python | Point the agent at `skills/ai-watermark-scrambler/SKILL.md` | No skill directory. The agent follows the workflow and runs the scripts |
 
 ```bash
 # all Grok projects
@@ -81,14 +81,14 @@ make install-skill
 
 # this repo only, so a clone is enough
 mkdir -p .grok/skills
-ln -sfn ../../skills/clean-ai-marks .grok/skills/clean-ai-marks
+ln -sfn ../../skills/ai-watermark-scrambler .grok/skills/ai-watermark-scrambler
 
 # Claude Code, all projects
 mkdir -p ~/.claude/skills
-ln -sfn "$(pwd)/skills/clean-ai-marks" ~/.claude/skills/clean-ai-marks
+ln -sfn "$(pwd)/skills/ai-watermark-scrambler" ~/.claude/skills/ai-watermark-scrambler
 ```
 
-The slash command is the directory name, `clean-ai-marks`. The names in the description (`/remove-ai-marks`, `/remove-claude-marks`) are trigger phrases, not extra commands.
+The slash command is the directory name, `ai-watermark-scrambler`. The names in the description (`/remove-ai-marks`, `/remove-claude-marks`) are trigger phrases, not extra commands.
 
 What the agent actually does:
 
@@ -106,14 +106,14 @@ make tools    # optional extras (pikepdf, c2pa-python) into the skill venv
 make test     # pytest
 make smoke    # end-to-end CLI run over tests/fixtures
 
-python3 skills/clean-ai-marks/scripts/inspect_file.py notes.md
-python3 skills/clean-ai-marks/scripts/clean_file.py notes.md -o notes.cleaned.md
+python3 skills/ai-watermark-scrambler/scripts/inspect_file.py notes.md
+python3 skills/ai-watermark-scrambler/scripts/clean_file.py notes.md -o notes.cleaned.md
 ```
 
 ## Layout
 
 ```
-skills/clean-ai-marks/
+skills/ai-watermark-scrambler/
   SKILL.md          agent-facing workflow
   README.md         human-facing tool documentation
   references/       mark classes, vendor notes, removal matrix, Claude specifics
@@ -128,7 +128,7 @@ Makefile            tools / test / smoke / qa / install-skill / clean
 
 | Target | Does |
 | --- | --- |
-| `tools` | Creates `skills/clean-ai-marks/.venv` and installs the optional extras |
+| `tools` | Creates `skills/ai-watermark-scrambler/.venv` and installs the optional extras |
 | `test` | Runs pytest |
 | `smoke` | Drives the CLI end to end over `tests/fixtures` |
 | `qa` | Runs the green-list research harness. Write-up: [`demo/README.md`](demo/README.md) |
@@ -151,14 +151,14 @@ Two separate install paths. Do not confuse them:
 - `pikepdf`: PDF strip and rewrite. Without it (or `qpdf`), PDF cleans exit 3 and the pre-strip revision stays readable.
 - `c2pa-python`: C2PA manifest inspection.
 - `exiftool`: no pip package; install with `brew install exiftool` or `apt install libimage-exiftool-perl`.
-- Run `python3 skills/clean-ai-marks/scripts/ensure_tools.py` for a status table.
+- Run `python3 skills/ai-watermark-scrambler/scripts/ensure_tools.py` for a status table.
 
 ## Tests
 
 - Suite covers the Unicode and container cleaners, image metadata paths, the Layer B rewrite hook, security properties (zip bombs, symlink writes, path handling), and a CLI contract pinning documented exit codes and flags against real `--help` output.
 - Tests needing `pikepdf` or `c2pa` skip themselves when absent, so the suite passes with or without the extras.
 - `make test` uses `.venv/bin/python` when a repo-level venv exists, `python3` otherwise.
-- The skill venv at `skills/clean-ai-marks/.venv` is added to `sys.path` by the scripts, so no activation needed.
+- The skill venv at `skills/ai-watermark-scrambler/.venv` is added to `sys.path` by the scripts, so no activation needed.
 
 ## CI
 

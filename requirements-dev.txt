@@ -2,7 +2,7 @@
 #
 # Installing the skill on a host does NOT use this file. The skill ships its own
 # requirements.txt and installs it into its own venv:
-#     python3 skills/clean-ai-marks/scripts/ensure_tools.py --install
--r skills/clean-ai-marks/requirements.txt
+#     python3 skills/ai-watermark-scrambler/scripts/ensure_tools.py --install
+-r skills/ai-watermark-scrambler/requirements.txt
 
 pytest>=9.1.1

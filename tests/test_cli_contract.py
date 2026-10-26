@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "skills" / "clean-ai-marks"
+SKILL = ROOT / "skills" / "ai-watermark-scrambler"
 SCRIPTS = SKILL / "scripts"
 FIXTURES = ROOT / "tests" / "fixtures"
 README = SKILL / "README.md"

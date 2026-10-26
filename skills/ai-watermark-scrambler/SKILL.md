@@ -1,5 +1,5 @@
 ---
-name: clean-ai-marks
+name: ai-watermark-scrambler
 description: >
   Scramble and blur statistical text watermarks (token-sampling: green-list,
   SynthID-Text, Claude's embedded text watermark, open-LLM sampling marks).
@@ -8,11 +8,11 @@ description: >
   container metadata. Does not touch pixel, audio, video, or visible watermarks.
   Use when the user asks to scramble or blur a statistical watermark, strip
   watermarks, remove C2PA/Content Credentials, clean AI metadata, remove
-  invisible Unicode, or runs /clean-ai-marks (aliases: /remove-ai-marks,
+  invisible Unicode, or runs /ai-watermark-scrambler (aliases: /remove-ai-marks,
   /remove-claude-marks).
 ---
 
-# Clean AI marks
+# AI Watermark Scrambler
 
 ## Setup
 

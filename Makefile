@@ -1,6 +1,6 @@
 .PHONY: test smoke tools install-skill qa clean
 
-SCRIPTS := skills/clean-ai-marks/scripts
+SCRIPTS := skills/ai-watermark-scrambler/scripts
 PYTHON ?= $(shell if [ -x .venv/bin/python ]; then echo .venv/bin/python; else echo python3; fi)
 
 tools:
@@ -26,9 +26,9 @@ SKILLS_DIR ?= $(HOME)/.grok/skills
 
 install-skill:
 	mkdir -p $(SKILLS_DIR)
-	ln -sfn $(CURDIR)/skills/clean-ai-marks $(SKILLS_DIR)/clean-ai-marks
-	@echo "linked -> $(SKILLS_DIR)/clean-ai-marks"
+	ln -sfn $(CURDIR)/skills/ai-watermark-scrambler $(SKILLS_DIR)/ai-watermark-scrambler
+	@echo "linked -> $(SKILLS_DIR)/ai-watermark-scrambler"
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-	rm -rf .pytest_cache .venv skills/clean-ai-marks/.venv
+	rm -rf .pytest_cache .venv skills/ai-watermark-scrambler/.venv
